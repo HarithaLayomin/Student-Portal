@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .navbar { background-color: #6c5ce7; }
+        .sidebar { height: 100vh; width: 250px; position: fixed; top: 0; left: 0; background-color: #343a40; padding-top: 56px; }
+        .sidebar a { padding: 10px 15px; text-decoration: none; font-size: 1.1em; color: #f8f9fa; display: block; }
+        .sidebar a:hover { background-color: #6c5ce7; }
+        .content { margin-left: 250px; padding: 20px; }
+        .card { border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .btn-purple { background-color: #6c5ce7; color: white; border: none; }
+        .btn-purple:hover { background-color: #5a4bbf; color: white; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Admin Panel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="logoutBtn">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sidebar">
+        <a href="#" id="uploadMaterialsLink"><i class="bi bi-cloud-arrow-up me-2"></i> Upload Materials</a>
+        <a href="#" id="manageMaterialsLink"><i class="bi bi-collection me-2"></i> Manage Materials</a>
+        <a href="#" id="pendingApprovalsLink"><i class="bi bi-person-check me-2"></i> Pending Approvals</a>
+        <a href="#" id="manageUsersLink"><i class="bi bi-people me-2"></i> Manage Users</a>
+    </div>
+
+    <div class="content">
+        <div id="uploadMaterialsSection" class="container mt-4 active-section">
+            <h2>Upload Lesson</h2>
+            <div class="card p-4">
+                <form id="uploadForm">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Lesson Title</label>
+                        <input type="text" id="title" class="form-control" placeholder="Lesson Title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="url" class="form-label">YouTube Link</label>
+                        <input type="text" id="url" class="form-control" placeholder="YouTube Link" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea id="description" class="form-control" rows="3" placeholder="Brief description of the lesson"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="course" class="form-label">Course</label>
+                        <select id="course" class="form-select">
+                            <option value="Maths">Maths</option>
+                            <option value="Physics">Physics</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-purple">Upload Now</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="manageMaterialsSection" class="container mt-4 d-none">
+            <h2>Manage Learning Materials</h2>
+            <div class="card p-4">
+                <div id="materialsList" class="row">
+                    <p class="text-center text-muted">Loading materials...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="pendingApprovalsSection" class="container mt-4 d-none">
+            <h2>Pending User Approvals</h2>
+            <div class="card p-4">
+                <div id="pendingUsersList" class="list-group">
+                    <p class="text-center text-muted">No pending users.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="manageUsersSection" class="container mt-4 d-none">
+            <h2>Manage Users</h2>
+            <div class="card p-4">
+                <button class="btn btn-purple mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">Add New User</button>
+                <div id="usersList" class="list-group">
+                    <p class="text-center text-muted">Loading users...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add User Modal -->
+        <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addUserForm">
+                            <div class="mb-3">
+                                <label for="addUserName" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="addUserName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="addUserEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="addUserEmail" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="addUserPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="addUserPassword" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="addUserRole" class="form-label">Role</label>
+                                <select class="form-select" id="addUserRole">
+                                    <option value="student">Student</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="addUserCourses" class="form-label">Permitted Courses (comma-separated)</label>
+                                <input type="text" class="form-control" id="addUserCourses" placeholder="Maths, Physics">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-purple w-100">Add User</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Material Modal -->
+        <div class="modal fade" id="editMaterialModal" tabindex="-1" aria-labelledby="editMaterialModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editMaterialModalLabel">Edit Material</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editMaterialForm">
+                            <input type="hidden" id="editMaterialId">
+                            <div class="mb-3">
+                                <label for="editMaterialTitle" class="form-label">Lesson Title</label>
+                                <input type="text" class="form-control" id="editMaterialTitle" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editMaterialUrl" class="form-label">YouTube Link</label>
+                                <input type="text" class="form-control" id="editMaterialUrl" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editMaterialDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="editMaterialDescription" rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editMaterialCourse" class="form-label">Course</label>
+                                <select class="form-select" id="editMaterialCourse">
+                                    <option value="Maths">Maths</option>
+                                    <option value="Physics">Physics</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-purple w-100">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit User Modal -->
+        <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editUserForm">
+                            <input type="hidden" id="editUserId">
+                            <div class="mb-3">
+                                <label for="editUserName" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="editUserName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editUserEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="editUserEmail" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editUserRole" class="form-label">Role</label>
+                                <select class="form-select" id="editUserRole">
+                                    <option value="student">Student</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editUserCourses" class="form-label">Permitted Courses (comma-separated)</label>
+                                <input type="text" class="form-control" id="editUserCourses" placeholder="Maths, Physics">
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="editUserApproved">
+                                <label class="form-check-label" for="editUserApproved">Approved</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-purple w-100">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || user.role !== 'admin') {
+            window.location.href = '/index.html'; // Redirect if not admin
+        }
+
+        const sections = { 
+            uploadMaterialsSection: document.getElementById('uploadMaterialsSection'),
+            manageMaterialsSection: document.getElementById('manageMaterialsSection'),
+            pendingApprovalsSection: document.getElementById('pendingApprovalsSection'),
+            manageUsersSection: document.getElementById('manageUsersSection'),
+        };
+
+        function showSection(sectionId) {
+            for (const key in sections) {
+                if (key === sectionId) {
+                    sections[key].classList.remove('d-none');
+                    sections[key].classList.add('active-section');
+                } else {
+                    sections[key].classList.add('d-none');
+                    sections[key].classList.remove('active-section');
+                }
+            }
+        }
+
+        document.getElementById('uploadMaterialsLink').addEventListener('click', (e) => { e.preventDefault(); showSection('uploadMaterialsSection'); });
+        document.getElementById('manageMaterialsLink').addEventListener('click', (e) => { e.preventDefault(); showSection('manageMaterialsSection'); loadMaterialsForAdmin(); });
+        document.getElementById('pendingApprovalsLink').addEventListener('click', (e) => { e.preventDefault(); showSection('pendingApprovalsSection'); loadPendingUsers(); });
+        document.getElementById('manageUsersLink').addEventListener('click', (e) => { e.preventDefault(); showSection('manageUsersSection'); loadUsersForAdmin(); });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('user');
+            window.location.href = '/index.html';
+        });
+
+        // --- Upload Material --- (existing functionality updated)
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const data = {
+                title: document.getElementById('title').value,
+                youtubeUrl: document.getElementById('url').value,
+                description: document.getElementById('description').value,
+                courseName: document.getElementById('course').value
+            };
+            const res = await fetch('/admin/upload', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            if(res.ok) {
+                alert("Video Published!");
+                e.target.reset();
+                loadMaterialsForAdmin();
+            } else {
+                alert("Failed to upload video.");
+            }
+        };
+
+        // --- Material Management --- (new functionality)
+        async function loadMaterialsForAdmin() {
+            const response = await fetch('/admin/materials');
+            const materials = await response.json();
+            const container = document.getElementById('materialsList');
+            container.innerHTML = '';
+            if (materials.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted">No materials available.</p>';
+                return;
+            }
+            materials.forEach(material => {
+                container.innerHTML += `
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">${material.title}</h5>
+                                <p class="card-text">${material.description || 'No description'}</p>
+                                <p class="card-text">Course: ${material.courseName}</p>
+                                <p class="card-text"><a href="${material.youtubeUrl}" target="_blank">${material.youtubeUrl}</a></p>
+                                <button class="btn btn-primary btn-sm me-2 edit-material-btn" data-id="${material._id}">Edit</button>
+                                <button class="btn btn-danger btn-sm delete-material-btn" data-id="${material._id}">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.querySelectorAll('.edit-material-btn').forEach(button => {
+                button.addEventListener('click', (e) => openEditMaterialModal(e.target.dataset.id));
+            });
+            document.querySelectorAll('.delete-material-btn').forEach(button => {
+                button.addEventListener('click', (e) => deleteMaterial(e.target.dataset.id));
+            });
+        }
+
+        async function openEditMaterialModal(id) {
+            const response = await fetch(`/admin/materials/${id}`);
+            const material = await response.json();
+            document.getElementById('editMaterialId').value = material._id;
+            document.getElementById('editMaterialTitle').value = material.title;
+            document.getElementById('editMaterialUrl').value = material.youtubeUrl;
+            document.getElementById('editMaterialDescription').value = material.description;
+            document.getElementById('editMaterialCourse').value = material.courseName;
+            var editMaterialModal = new bootstrap.Modal(document.getElementById('editMaterialModal'));
+            editMaterialModal.show();
+        }
+
+        document.getElementById('editMaterialForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editMaterialId').value;
+            const data = {
+                title: document.getElementById('editMaterialTitle').value,
+                youtubeUrl: document.getElementById('editMaterialUrl').value,
+                description: document.getElementById('editMaterialDescription').value,
+                courseName: document.getElementById('editMaterialCourse').value
+            };
+            const res = await fetch(`/admin/materials/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            if(res.ok) {
+                alert("Material updated successfully!");
+                var editMaterialModal = bootstrap.Modal.getInstance(document.getElementById('editMaterialModal'));
+                editMaterialModal.hide();
+                loadMaterialsForAdmin();
+            } else {
+                alert("Failed to update material.");
+            }
+        });
+
+        async function deleteMaterial(id) {
+            if (!confirm("Are you sure you want to delete this material?")) return;
+            const res = await fetch(`/admin/materials/${id}`, {
+                method: 'DELETE'
+            });
+            if(res.ok) {
+                alert("Material deleted successfully!");
+                loadMaterialsForAdmin();
+            } else {
+                alert("Failed to delete material.");
+            }
+        }
+
+        // --- Pending User Approvals --- (new functionality)
+        async function loadPendingUsers() {
+            const response = await fetch('/admin/pending-users');
+            const users = await response.json();
+            const container = document.getElementById('pendingUsersList');
+            container.innerHTML = '';
+            if (users.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted">No pending users.</p>';
+                return;
+            }
+            users.forEach(user => {
+                container.innerHTML += `
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5>${user.name} (${user.email})</h5>
+                            <small>Registered: ${new Date(user.createdAt).toLocaleDateString()}</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-success btn-sm me-2 approve-user-btn" data-id="${user._id}">Approve</button>
+                            <button class="btn btn-danger btn-sm reject-user-btn" data-id="${user._id}">Reject</button>
+                        </div>
+                    </div>
+                `;
+            });
+            document.querySelectorAll('.approve-user-btn').forEach(button => {
+                button.addEventListener('click', (e) => approveUser(e.target.dataset.id));
+            });
+            document.querySelectorAll('.reject-user-btn').forEach(button => {
+                button.addEventListener('click', (e) => rejectUser(e.target.dataset.id));
+            });
+        }
+
+        async function approveUser(id) {
+            const res = await fetch(`/admin/approve-user/${id}`, {
+                method: 'POST'
+            });
+            if(res.ok) {
+                alert("User approved successfully!");
+                loadPendingUsers();
+                loadUsersForAdmin(); // Refresh all users list
+            } else {
+                alert("Failed to approve user.");
+            }
+        }
+
+        async function rejectUser(id) {
+            if (!confirm("Are you sure you want to reject this user?")) return;
+            const res = await fetch(`/admin/reject-user/${id}`, {
+                method: 'DELETE'
+            });
+            if(res.ok) {
+                alert("User rejected successfully!");
+                loadPendingUsers();
+            } else {
+                alert("Failed to reject user.");
+            }
+        }
+
+        // --- User Management --- (new functionality)
+        async function loadUsersForAdmin() {
+            const response = await fetch('/admin/users');
+            const users = await response.json();
+            const container = document.getElementById('usersList');
+            container.innerHTML = '';
+            if (users.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted">No users available.</p>';
+                return;
+            }
+            users.forEach(user => {
+                container.innerHTML += `
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5>${user.name} (${user.email}) <span class="badge bg-${user.role === 'admin' ? 'danger' : 'primary'}">${user.role}</span></h5>
+                            <small>Approved: ${user.isApproved ? 'Yes' : 'No'} | Courses: ${user.permittedCourses.join(', ') || 'None'}</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-info btn-sm me-2 edit-user-btn" data-id="${user._id}">Edit</button>
+                            <button class="btn btn-danger btn-sm delete-user-btn" data-id="${user._id}">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            document.querySelectorAll('.edit-user-btn').forEach(button => {
+                button.addEventListener('click', (e) => openEditUserModal(e.target.dataset.id));
+            });
+            document.querySelectorAll('.delete-user-btn').forEach(button => {
+                button.addEventListener('click', (e) => deleteUser(e.target.dataset.id));
+            });
+        }
+
+        document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('addUserName').value;
+            const email = document.getElementById('addUserEmail').value;
+            const password = document.getElementById('addUserPassword').value;
+            const role = document.getElementById('addUserRole').value;
+            const permittedCourses = document.getElementById('addUserCourses').value.split(',').map(c => c.trim()).filter(c => c);
+
+            const res = await fetch('/admin/users', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, email, password, role, permittedCourses })
+            });
+            if(res.ok) {
+                alert("User added successfully!");
+                var addUserModal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+                addUserModal.hide();
+                e.target.reset();
+                loadUsersForAdmin();
+            } else {
+                alert("Failed to add user.");
+            }
+        });
+
+        async function openEditUserModal(id) {
+            const response = await fetch(`/admin/users/${id}`);
+            const user = await response.json();
+            document.getElementById('editUserId').value = user._id;
+            document.getElementById('editUserName').value = user.name;
+            document.getElementById('editUserEmail').value = user.email;
+            document.getElementById('editUserRole').value = user.role;
+            document.getElementById('editUserCourses').value = user.permittedCourses.join(', ');
+            document.getElementById('editUserApproved').checked = user.isApproved;
+            var editUserModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            editUserModal.show();
+        }
+
+        document.getElementById('editUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editUserId').value;
+            const data = {
+                name: document.getElementById('editUserName').value,
+                role: document.getElementById('editUserRole').value,
+                permittedCourses: document.getElementById('editUserCourses').value.split(',').map(c => c.trim()).filter(c => c),
+                isApproved: document.getElementById('editUserApproved').checked
+            };
+            const res = await fetch(`/admin/users/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            if(res.ok) {
+                alert("User updated successfully!");
+                var editUserModal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+                editUserModal.hide();
+                loadUsersForAdmin();
+                loadPendingUsers(); // Refresh pending users in case approval status changed
+            } else {
+                alert("Failed to update user.");
+            }
+        });
+
+        async function deleteUser(id) {
+            if (!confirm("Are you sure you want to delete this user?")) return;
+            const res = await fetch(`/admin/users/${id}`, {
+                method: 'DELETE'
+            });
+            if(res.ok) {
+                alert("User deleted successfully!");
+                loadUsersForAdmin();
+                loadPendingUsers(); // Refresh pending users in case an unapproved user was deleted
+            } else {
+                alert("Failed to delete user.");
+            }
+        }
+
+        // Initial load of sections
+        // Default to upload materials or current active based on user preference
+        showSection('uploadMaterialsSection');
+        
+    </script>
+</body>
+</html>
