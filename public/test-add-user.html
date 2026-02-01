@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Add User</title>
+</head>
+<body>
+    <h1>Test Add User API</h1>
+    <button onclick="testAddUser()">Test Add User</button>
+    <pre id="output"></pre>
+    
+    <script>
+        async function testAddUser() {
+            const data = {
+                name: "Test User " + Date.now(),
+                email: "test" + Date.now() + "@example.com",
+                password: "password123",
+                role: "student",
+                permittedCourses: ["Maths"]
+            };
+            
+            try {
+                const response = await fetch('/admin/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                document.getElementById('output').textContent = 
+                    'Status: ' + response.status + '\n' +
+                    'Response: ' + JSON.stringify(result, null, 2);
+                console.log('Response:', result);
+            } catch (error) {
+                document.getElementById('output').textContent = 'Error: ' + error.message;
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -51,5 +51,16 @@ app.use('/admin', require('./routes/admin'));
 app.use('/student', require('./routes/student'));
 
 const PORT = 3000;
-app.listen(PORT, () => console.log(`🚀 Server: http://localhost:${PORT}`));
+const server = app.listen(PORT, '127.0.0.1', () => console.log(`🚀 Server: http://localhost:${PORT}`));
+
+// Handle server errors
+server.on('error', (err) => {
+    console.error('Server error:', err);
+    process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 

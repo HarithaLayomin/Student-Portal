@@ -24,7 +24,8 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ msg: "Wrong password" });
         }
 
-        if (!user.isApproved) {
+        // Only require approval for students, not admins
+        if (user.role !== 'admin' && !user.isApproved) {
             console.log("❌ User not approved");
             return res.status(401).json({ msg: "Your account is pending approval." });
         }

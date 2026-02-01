@@ -460,19 +460,26 @@
             const role = document.getElementById('addUserRole').value;
             const permittedCourses = document.getElementById('addUserCourses').value.split(',').map(c => c.trim()).filter(c => c);
 
-            const res = await fetch('/admin/users', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ name, email, password, role, permittedCourses })
-            });
-            if(res.ok) {
-                alert("User added successfully!");
-                var addUserModal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
-                addUserModal.hide();
-                e.target.reset();
-                loadUsersForAdmin();
-            } else {
-                alert("Failed to add user.");
+            try {
+                const res = await fetch('/admin/users', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name, email, password, role, permittedCourses })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    alert("User added successfully!");
+                    var addUserModal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+                    addUserModal.hide();
+                    e.target.reset();
+                    loadUsersForAdmin();
+                } else {
+                    alert("Failed to add user: " + (data.msg || 'Unknown error'));
+                    console.error('Server error:', data);
+                }
+            } catch (err) {
+                alert("Error adding user: " + err.message);
+                console.error('Fetch error:', err);
             }
         });
 
