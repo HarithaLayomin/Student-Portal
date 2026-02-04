@@ -4,6 +4,40 @@ const bcrypt = require('bcryptjs');
 const Material = require('../models/Material');
 const User = require('../models/User');
 const Lecturer = require('../models/Lecturer');
+const Banner = require('../models/Banner');
+const HomeContent = require('../models/HomeContent');
+const multer = require('multer');
+const path = require('path');
+
+// Multer storage for banner images
+const bannerStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, path.join(__dirname, '..', 'public', 'uploads', 'banners'));
+    },
+    filename: (req, file, cb) => {
+        const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const ts = Date.now();
+        cb(null, `${ts}_${safeName}`);
+    }
+});
+const imageOnly = (req, file, cb) => {
+    if (file.mimetype && file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Only image files are allowed'));
+};
+const uploadBannerImage = multer({ storage: bannerStorage, fileFilter: imageOnly, limits: { fileSize: 5 * 1024 * 1024 } });
+
+// Multer storage for lecturer photos
+const lecturerStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, path.join(__dirname, '..', 'public', 'uploads', 'lecturers'));
+    },
+    filename: (req, file, cb) => {
+        const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const ts = Date.now();
+        cb(null, `${ts}_${safeName}`);
+    }
+});
+const uploadLecturerPhoto = multer({ storage: lecturerStorage, fileFilter: imageOnly, limits: { fileSize: 2 * 1024 * 1024 } });
 
 // Route to save a new YouTube link
 router.post('/upload', async (req, res) => {
@@ -240,28 +274,79 @@ router.get('/lecturers', async (req, res) => {
 });
 
 // Add a new lecturer
-router.post('/lecturers', async (req, res) => {
+router.post('/lecturers', uploadLecturerPhoto.single('photo'), async (req, res) => {
     try {
-        const { name, email, department, bio, photoUrl } = req.body;
+        const { name, email, professionalRoles, qualifications, achievements, specializationAreas } = req.body;
+        
+        const parseField = (field) => {
+            if (!field) return [];
+            if (Array.isArray(field)) return field;
+            try { return JSON.parse(field); } catch { return [field]; }
+        };
+
+        const roles = parseField(professionalRoles);
+        const quals = parseField(qualifications);
+        const achs = parseField(achievements);
+        const specs = parseField(specializationAreas);
+
         if (!name || !email) {
             return res.status(400).json({ msg: 'Name and email are required' });
         }
-        const lecturer = new Lecturer({ name, email, department, bio, photoUrl });
+
+        let photoUrl = '';
+        if (req.file) {
+            photoUrl = `/uploads/lecturers/${req.file.filename}`;
+        }
+
+        const lecturer = new Lecturer({ 
+            name, 
+            email, 
+            photoUrl, 
+            professionalRoles: roles, 
+            qualifications: quals, 
+            achievements: achs, 
+            specializationAreas: specs 
+        });
         await lecturer.save();
         res.json({ msg: 'Lecturer added successfully', lecturer });
     } catch (err) {
-        console.error(err);
+        console.error("Error adding lecturer:", err);
         res.status(500).json({ msg: 'Error adding lecturer' });
     }
 });
 
 // Update lecturer details
-router.put('/lecturers/:id', async (req, res) => {
+router.put('/lecturers/:id', uploadLecturerPhoto.single('photo'), async (req, res) => {
     try {
-        const { name, email, department, bio, photoUrl } = req.body;
+        const { name, email, professionalRoles, qualifications, achievements, specializationAreas } = req.body;
+        
+        const parseField = (field) => {
+            if (!field) return [];
+            if (Array.isArray(field)) return field;
+            try { return JSON.parse(field); } catch { return [field]; }
+        };
+
+        const roles = parseField(professionalRoles);
+        const quals = parseField(qualifications);
+        const achs = parseField(achievements);
+        const specs = parseField(specializationAreas);
+
+        const updateData = { 
+            name, 
+            email, 
+            professionalRoles: roles, 
+            qualifications: quals, 
+            achievements: achs, 
+            specializationAreas: specs 
+        };
+
+        if (req.file) {
+            updateData.photoUrl = `/uploads/lecturers/${req.file.filename}`;
+        }
+
         const lecturer = await Lecturer.findByIdAndUpdate(
             req.params.id,
-            { name, email, department, bio, photoUrl },
+            updateData,
             { new: true }
         );
         if (!lecturer) {
@@ -269,7 +354,7 @@ router.put('/lecturers/:id', async (req, res) => {
         }
         res.json({ msg: 'Lecturer updated successfully', lecturer });
     } catch (err) {
-        console.error(err);
+        console.error("Error updating lecturer:", err);
         res.status(500).json({ msg: 'Error updating lecturer' });
     }
 });
@@ -288,4 +373,78 @@ router.delete('/lecturers/:id', async (req, res) => {
     }
 });
 
+// Homepage Content Management
+router.get('/home-content', async (req, res) => {
+    try {
+        const content = await HomeContent.findOne({});
+        res.json(content || {});
+    } catch {
+        res.status(500).json({ msg: 'Error fetching home content' });
+    }
+});
+
+router.put('/home-content', async (req, res) => {
+    try {
+        const { heroTitle, heroSubtitle, backgroundUrl } = req.body;
+        const content = await HomeContent.findOneAndUpdate(
+            {},
+            { heroTitle, heroSubtitle, backgroundUrl, updatedAt: new Date() },
+            { new: true, upsert: true }
+        );
+        res.json({ msg: 'Home content updated', content });
+    } catch {
+        res.status(500).json({ msg: 'Error updating home content' });
+    }
+});
+
+// Advertisement Banner Management
+router.get('/banners', async (req, res) => {
+    try {
+        const banners = await Banner.find({}).sort({ order: 1, createdAt: -1 });
+        res.json(banners);
+    } catch {
+        res.status(500).json({ msg: 'Error fetching banners' });
+    }
+});
+
+router.post('/banners', uploadBannerImage.single('image'), async (req, res) => {
+    try {
+        const { title, linkUrl, active, order } = req.body;
+        const imageUrl = req.file
+            ? `/uploads/banners/${req.file.filename}`
+            : (req.body.imageUrl || '');
+        const banner = new Banner({ title, imageUrl, linkUrl, active, order });
+        await banner.save();
+        res.json({ msg: 'Banner created', banner });
+    } catch (err) {
+        res.status(500).json({ msg: 'Error creating banner', error: err.message });
+    }
+});
+
+router.put('/banners/:id', async (req, res) => {
+    try {
+        const { title, imageUrl, linkUrl, active, order } = req.body;
+        const banner = await Banner.findByIdAndUpdate(
+            req.params.id,
+            { title, imageUrl, linkUrl, active, order },
+            { new: true }
+        );
+        if (!banner) return res.status(404).json({ msg: 'Banner not found' });
+        res.json({ msg: 'Banner updated', banner });
+    } catch {
+        res.status(500).json({ msg: 'Error updating banner' });
+    }
+});
+
+router.delete('/banners/:id', async (req, res) => {
+    try {
+        const banner = await Banner.findByIdAndDelete(req.params.id);
+        if (!banner) return res.status(404).json({ msg: 'Banner not found' });
+        res.json({ msg: 'Banner deleted' });
+    } catch {
+        res.status(500).json({ msg: 'Error deleting banner' });
+    }
+});
+
 module.exports = router;
+

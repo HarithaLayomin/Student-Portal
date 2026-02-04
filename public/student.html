@@ -5,61 +5,356 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Learning Portal</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/style.css" rel="stylesheet">
     <style>
-        .video-card { transition: transform 0.2s; border: none; shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .video-card:hover { transform: scale(1.02); }
-        .navbar { background-color: #6c5ce7; }
+        .banner-slideshow {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transform: scale(1.05);
+            transition: opacity 1.2s ease-in-out, transform 1.2s ease-in-out;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .slide::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(5, 8, 22, 0.5);
+            backdrop-filter: blur(1px);
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 2;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .slide-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .slideshow-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 3;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: all 0.4s ease;
+        }
+
+        .dot.active {
+            background: var(--accent);
+            width: 24px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .video-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            height: 100%;
+        }
+
+        .video-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent);
+            box-shadow: 0 15px 30px rgba(124, 58, 237, 0.1);
+        }
+
+        .video-card iframe {
+            border: none;
+        }
+
+        .welcome-section {
+            padding: 40px 0;
+            margin-bottom: 20px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: var(--accent-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
     </style>
 </head>
-<body class="bg-light">
+<body>
 
-    <nav class="navbar navbar-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
-            <span class="navbar-brand mb-0 h1">My Tuition Portal</span>
+            <a class="navbar-brand" href="/">STUDENT PORTAL</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto gap-3 align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/learning_resources.html">Resources</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-outline-custom btn-sm" href="#" id="logoutBtn">Sign Out</a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
 
-    <div class="container">
-        <h2 class="mb-4">My Learning Materials</h2>
-        <div id="videoContainer" class="row">
-            <div class="text-center mt-5">
+    <div class="container" style="margin-top: 100px;">
+        <div class="welcome-section d-flex align-items-center gap-4 animate-fade-in">
+            <div class="user-avatar" id="userInitial">S</div>
+            <div>
+                <h1 class="h3 fw-bold mb-1">Welcome back, <span id="userName" class="text-primary">Student</span>!</h1>
+                <p class="text-secondary mb-0">Continue your journey to communication excellence.</p>
+            </div>
+        </div>
+
+        <div class="banner-slideshow" id="bannerSlideshow">
+            <div id="bannerSlides"></div>
+            <div class="slideshow-dots" id="bannerDots"></div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h4 fw-bold m-0">My Learning Materials</h2>
+            <div id="materialCount" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2">0 Lessons</div>
+        </div>
+
+        <div id="videoContainer" class="row g-4 pb-5">
+            <div class="text-center py-5">
                 <div class="spinner-border text-primary" role="status"></div>
-                <p>Loading your lessons...</p>
+                <p class="mt-3 text-secondary">Loading your personalized lessons...</p>
             </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // This script asks your server for the data when the page opens
-        async function loadMaterials() {
+        // Check if logged in
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || user.role !== 'student') {
+            window.location.href = '/login.html';
+        } else {
+            document.getElementById('userName').innerText = user.name || user.username;
+            document.getElementById('userInitial').innerText = (user.name || user.username).charAt(0).toUpperCase();
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        });
+
+        // Banner Slideshow Logic
+        let currentSlide = 0;
+        let slides = [];
+        let timer;
+
+        async function loadBanners() {
             try {
-                const response = await fetch('/student/my-materials');
+                const res = await fetch('/api/banners');
+                const data = await res.json();
+                const activeBanners = data.filter(b => b.active);
+                
+                const container = document.getElementById('bannerSlides');
+                const dotsContainer = document.getElementById('bannerDots');
+                
+                if (activeBanners.length === 0) {
+                    document.getElementById('bannerSlideshow').style.display = 'none';
+                    return;
+                }
+
+                container.innerHTML = '';
+                dotsContainer.innerHTML = '';
+
+                activeBanners.forEach((banner, index) => {
+                    const slide = document.createElement(banner.linkUrl ? 'a' : 'div');
+                    slide.className = `slide ${index === 0 ? 'active' : ''}`;
+                    if (banner.linkUrl) slide.href = banner.linkUrl;
+                    slide.style.backgroundImage = `url(${banner.imageUrl})`;
+                    slide.innerHTML = `<div class="slide-content"><h4 class="slide-title">${banner.title}</h4></div>`;
+                    container.appendChild(slide);
+
+                    const dot = document.createElement('div');
+                    dot.className = `dot ${index === 0 ? 'active' : ''}`;
+                    dot.onclick = () => goToSlide(index);
+                    dotsContainer.appendChild(dot);
+                });
+
+                slides = document.querySelectorAll('.slide');
+                if (slides.length > 1) startSlideshow();
+            } catch (err) {
+                console.error("Failed to load banners:", err);
+            }
+        }
+
+        function showSlide(index) {
+            slides.forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
+            
+            if(slides[index]) slides[index].classList.add('active');
+            const dots = document.querySelectorAll('.dot');
+            if(dots[index]) dots[index].classList.add('active');
+            currentSlide = index;
+        }
+
+        function nextSlide() {
+            if (slides.length === 0) return;
+            let next = (currentSlide + 1) % slides.length;
+            showSlide(next);
+        }
+
+        function goToSlide(index) {
+            clearInterval(timer);
+            showSlide(index);
+            startSlideshow();
+        }
+
+        function startSlideshow() {
+            timer = setInterval(nextSlide, 5000);
+        }
+
+        async function loadMaterials() {
+            const container = document.getElementById('videoContainer');
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                if (!user.courses || !Array.isArray(user.courses)) {
+                    console.warn("User has no courses array:", user);
+                    document.getElementById('materialCount').innerText = "0 Lessons";
+                    container.innerHTML = `
+                        <div class="col-12 text-center py-5">
+                            <div class="glass-card p-5">
+                                <i class="bi bi-journal-x text-secondary" style="font-size: 3rem;"></i>
+                                <h4 class="mt-3 text-secondary">No courses assigned</h4>
+                                <p class="text-muted">You haven't been assigned to any courses yet. Please contact support.</p>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const coursesParam = user.courses.join(',');
+                const response = await fetch(`/student/my-materials?courses=${encodeURIComponent(coursesParam)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+
                 const materials = await response.json();
-                const container = document.getElementById('videoContainer');
-                container.innerHTML = ''; // Clear the loading spinner
+                document.getElementById('materialCount').innerText = `${materials.length} Lessons`;
+                container.innerHTML = ''; 
+
+                if (materials.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-12 text-center py-5">
+                            <div class="glass-card p-5">
+                                <i class="bi bi-journal-x text-secondary" style="font-size: 3rem;"></i>
+                                <h4 class="mt-3 text-secondary">No materials assigned yet</h4>
+                                <p class="text-muted">Your instructor will assign materials to you soon.</p>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
 
                 materials.forEach(item => {
-                    // Extract Video ID from YouTube Link to make it embeddable
-                    const videoId = item.youtubeUrl.split('v=')[1] || item.youtubeUrl.split('/').pop();
+                    let videoId = '';
+                    if (item.youtubeUrl) {
+                        if (item.youtubeUrl.includes('v=')) {
+                            videoId = item.youtubeUrl.split('v=')[1].split('&')[0];
+                        } else {
+                            videoId = item.youtubeUrl.split('/').pop();
+                        }
+                    }
                     
                     container.innerHTML += `
-                        <div class="col-md-6 col-lg-4 mb-4">
-                            <div class="card video-card h-100">
-                                <div class="ratio ratio-16x9">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="video-card p-3">
+                                <div class="ratio ratio-16x9 mb-3 rounded-3 overflow-hidden">
                                     <iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>
                                 </div>
-                                <div class="card-body">
-                                    <h5 class="card-title">${item.title}</h5>
-                                    <span class="badge bg-info text-dark">${item.courseName}</span>
+                                <h5 class="fw-bold mb-2">${item.title || 'Untitled'}</h5>
+                                <div class="d-flex justify-content-between align-items-center mt-auto">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">${item.courseName || 'General'}</span>
+                                    <small class="text-secondary"><i class="bi bi-clock me-1"></i> New Lesson</small>
                                 </div>
                             </div>
                         </div>
                     `;
                 });
             } catch (err) {
-                console.error("Failed to load:", err);
+                console.error("Failed to load materials:", err);
+                if (container) {
+                    container.innerHTML = `
+                        <div class="col-12 text-center py-5">
+                            <div class="glass-card p-5 border-danger">
+                                <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                                <h4 class="mt-3 text-danger">Failed to load learning materials</h4>
+                                <p class="text-muted">There was an issue connecting to the server. Please ensure you are using <a href="http://localhost:3000" class="text-primary">port 3000</a>.</p>
+                                <button onclick="loadMaterials()" class="btn btn-outline-primary mt-3">Try Again</button>
+                            </div>
+                        </div>
+                    `;
+                }
             }
         }
+        
+        loadBanners();
         loadMaterials();
     </script>
 </body>

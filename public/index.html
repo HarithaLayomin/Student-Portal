@@ -1,40 +1,419 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login - Student Portal</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Masterclass</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/style.css" rel="stylesheet">
+    <style>
+        :root {
+            --accent-gradient: linear-gradient(135deg, #7c3aed, #4f46e5);
+        }
+
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding-top: 100px;
+            background: radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.1) 0%, transparent 50%);
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(var(--glass-border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-title {
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 2rem;
+            letter-spacing: -2px;
+            background: linear-gradient(to bottom, #fff 30%, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleReveal 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes titleReveal {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            line-height: 1.6;
+            animation: subtitleReveal 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s backwards;
+        }
+
+        @keyframes subtitleReveal {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-btns {
+            animation: subtitleReveal 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s backwards;
+        }
+
+        /* Stats Section */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 5rem;
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 40px;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.8rem;
+        }
+
+        /* Advanced Slideshow */
+        .banner-slideshow {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            border-radius: 30px;
+            overflow: hidden;
+            margin-top: 60px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transform: scale(1.1);
+            transition: opacity 1.2s ease-in-out, transform 1.2s ease-in-out;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .slide::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(5, 8, 22, 0.4);
+            backdrop-filter: blur(2px);
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        .slide-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            margin-bottom: 1rem;
+        }
+
+        .slideshow-dots {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 3;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dot.active {
+            background: var(--accent);
+            width: 30px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        .highlight-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            transition: all 0.4s ease;
+            height: 100%;
+        }
+
+        .highlight-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-10px);
+            background: rgba(124, 58, 237, 0.05);
+        }
+
+        .feature-icon-wrapper {
+            width: 60px;
+            height: 60px;
+            background: var(--accent-gradient);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            color: white;
+            box-shadow: 0 10px 20px rgba(124, 58, 237, 0.3);
+        }
+
+        footer {
+            border-top: 1px solid var(--glass-border);
+            background: rgba(5, 8, 22, 0.8);
+        }
+    </style>
 </head>
-<body class="bg-dark d-flex align-items-center" style="height: 100vh;">
-    <div class="container card p-4" style="max-width: 400px;">
-        <h3 class="text-center mb-4">Login</h3>
-        <form id="loginForm">
-            <input type="email" id="email" class="form-control mb-3" placeholder="Email" required>
-            <input type="password" id="password" class="form-control mb-3" placeholder="Password" required>
-            <button class="btn btn-primary w-100">Login</button>
-            <p class="text-center mt-3">Don't have an account? <a href="/signup.html">Sign Up</a></p>
-        </form>
-    </div>
+<body>
 
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">ADVANCED MASTERCLASS</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto gap-2">
+                    <li class="nav-item"><a class="nav-link" href="/program_overview.html">Overview</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/lecturers.html">Lecturers</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/learning_resources.html">Resources</a></li>
+                    <li class="nav-item ms-lg-3"><a class="btn btn-outline-custom" href="/login.html">Sign In</a></li>
+                    <li class="nav-item"><a class="btn btn-primary-custom" href="/signup.html">Get Started</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section text-center">
+        <div class="container">
+            <div class="hero-content animate-fade-in">
+                <div class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-3 py-2 mb-4 border border-primary border-opacity-25">
+                    <i class="bi bi-stars me-2"></i> Elevate Your Communication
+                </div>
+                <h1 id="heroTitle" class="hero-title">Master Academic English <br> & Presentation Skills</h1>
+                <p id="heroSubtitle" class="hero-subtitle">Transform your professional delivery with our 2-month expert-led masterclass. Designed for ambitious students and professionals.</p>
+                
+                <div class="hero-btns d-flex flex-wrap justify-content-center gap-3">
+                    <a href="/signup.html" class="btn btn-primary-custom btn-lg">Enroll Now — LKR 12,000</a>
+                    <a href="/program_overview.html" class="btn btn-outline-custom btn-lg">View Syllabus</a>
+                </div>
+
+                <div class="stats-grid animate-fade-in">
+                    <div class="stat-item">
+                        <div class="stat-value">500+</div>
+                        <div class="stat-label">Students Graduated</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">98%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">24/7</div>
+                        <div class="stat-label">Expert Support</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">15+</div>
+                        <div class="stat-label">Industry Mentors</div>
+                    </div>
+                </div>
+
+                <div class="banner-slideshow" id="bannerSlideshow">
+                    <div id="bannerSlides"></div>
+                    <div class="slideshow-dots" id="bannerDots"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="program-highlights pb-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="highlight-card">
+                        <div class="feature-icon-wrapper">
+                            <i class="bi bi-display"></i>
+                        </div>
+                        <h3 class="h4 fw-bold mb-3">Interactive Delivery</h3>
+                        <p class="text-secondary mb-0">Engage in live sessions designed to build confidence in real-world speaking scenarios with real-time feedback.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="highlight-card">
+                        <div class="feature-icon-wrapper">
+                            <i class="bi bi-award"></i>
+                        </div>
+                        <h3 class="h4 fw-bold mb-3">Certified Excellence</h3>
+                        <p class="text-secondary mb-0">Receive a recognized certification upon completion of your masterclass journey to boost your career prospects.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="highlight-card">
+                        <div class="feature-icon-wrapper">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <h3 class="h4 fw-bold mb-3">Expert Mentorship</h3>
+                        <p class="text-secondary mb-0">Learn from seasoned lecturers with years of academic and professional experience in global communication.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer py-5">
+        <div class="container text-center">
+            <div class="mb-4">
+                <a class="navbar-brand fs-3" href="/">ADVANCED MASTERCLASS</a>
+            </div>
+            <p class="text-secondary mb-0">&copy; 2026 Advanced Masterclass. Empowering future leaders through communication excellence.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('loginForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+        // Banner Slideshow Logic
+        let currentSlide = 0;
+        let slides = [];
+        let timer;
 
-            const res = await fetch('/auth/login', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ email, password })
-            });
+        async function loadBanners() {
+            try {
+                const res = await fetch('/api/banners');
+                const data = await res.json();
+                const activeBanners = data.filter(b => b.active);
+                
+                const container = document.getElementById('bannerSlides');
+                const dotsContainer = document.getElementById('bannerDots');
+                
+                if (activeBanners.length === 0) {
+                    document.getElementById('bannerSlideshow').style.display = 'none';
+                    return;
+                }
 
-            const data = await res.json();
-            if(res.ok) {
-                localStorage.setItem('user', JSON.stringify(data));
-                window.location.href = data.role === 'admin' ? '/admin.html' : '/student.html';
-            } else {
-                alert("Login Failed: " + data.msg);
+                container.innerHTML = '';
+                dotsContainer.innerHTML = '';
+
+                activeBanners.forEach((banner, index) => {
+                    const slide = document.createElement(banner.linkUrl ? 'a' : 'div');
+                    slide.className = `slide ${index === 0 ? 'active' : ''}`;
+                    if (banner.linkUrl) slide.href = banner.linkUrl;
+                    slide.style.backgroundImage = `url(${banner.imageUrl})`;
+                    slide.innerHTML = `<div class="slide-content"><h4 class="slide-title">${banner.title}</h4></div>`;
+                    container.appendChild(slide);
+
+                    const dot = document.createElement('div');
+                    dot.className = `dot ${index === 0 ? 'active' : ''}`;
+                    dot.onclick = () => goToSlide(index);
+                    dotsContainer.appendChild(dot);
+                });
+
+                slides = document.querySelectorAll('.slide');
+                startSlideshow();
+            } catch (err) {
+                console.error("Failed to load banners:", err);
             }
-        };
+        }
+
+        function showSlide(index) {
+            slides.forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
+            
+            slides[index].classList.add('active');
+            document.querySelectorAll('.dot')[index].classList.add('active');
+            currentSlide = index;
+        }
+
+        function nextSlide() {
+            let next = (currentSlide + 1) % slides.length;
+            showSlide(next);
+        }
+
+        function goToSlide(index) {
+            clearInterval(timer);
+            showSlide(index);
+            startSlideshow();
+        }
+
+        function startSlideshow() {
+            timer = setInterval(nextSlide, 5000);
+        }
+
+        // Home Content Logic
+        async function loadHomeContent() {
+            try {
+                const res = await fetch('/api/home-content');
+                const data = await res.json();
+                if (data.heroTitle) document.getElementById('heroTitle').innerHTML = data.heroTitle.replace(/\n/g, '<br>');
+                if (data.heroSubtitle) document.getElementById('heroSubtitle').innerText = data.heroSubtitle;
+            } catch {}
+        }
+
+        loadBanners();
+        loadHomeContent();
     </script>
 </body>
 </html>

@@ -6,5 +6,5 @@ const UserSchema = new mongoose.Schema({
     role: { type: String, enum: ['admin', 'student'], default: 'student' },
     isApproved: { type: Boolean, default: false },
     permittedCourses: [{ type: String }] // e.g. ["Maths", "Physics"]
-});
+}, { timestamps: true });
 module.exports = mongoose.model('User', UserSchema);

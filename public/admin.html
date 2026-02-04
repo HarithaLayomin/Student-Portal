@@ -6,17 +6,81 @@
     <title>Admin Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        body { background-color: #f8f9fa; }
-        .navbar { background-color: #6c5ce7; }
-        .sidebar { height: 100vh; width: 250px; position: fixed; top: 0; left: 0; background-color: #343a40; padding-top: 56px; }
-        .sidebar a { padding: 10px 15px; text-decoration: none; font-size: 1.1em; color: #f8f9fa; display: block; }
-        .sidebar a:hover { background-color: #6c5ce7; }
-        .content { margin-left: 250px; padding: 20px; }
-        .card { border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .btn-purple { background-color: #6c5ce7; color: white; border: none; }
-        .btn-purple:hover { background-color: #5a4bbf; color: white; }
-    </style>
+    <link rel="stylesheet" href="style.css">
+<style>
+    /* Custom adjustments for Admin Dashboard */
+    .sidebar { 
+        height: calc(100vh - 40px); 
+        width: 260px; 
+        position: fixed; 
+        top: 20px; 
+        left: 20px; 
+        background: var(--bg-card);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        box-shadow: var(--glass-shadow);
+        padding-top: 30px;
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+
+    .sidebar a { 
+        padding: 12px 25px; 
+        margin: 8px 15px;
+        text-decoration: none; 
+        font-size: 0.95rem; 
+        color: var(--text-secondary); 
+        display: flex;
+        align-items: center;
+        border-radius: 12px;
+        transition: 0.2s;
+    }
+
+    .sidebar a i { font-size: 1.2rem; }
+
+    .sidebar a:hover, .sidebar a.active { 
+        background: var(--accent);
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 4px 15px var(--accent-glow);
+    }
+
+    /* Content Area */
+    .content { margin-left: 300px; padding: 40px 40px 40px 20px; }
+
+    h2 { font-weight: 700; margin-bottom: 25px; color: var(--text-primary); }
+
+    /* Stat Cards (using glassmorphism) */
+    .stat-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        box-shadow: var(--glass-shadow);
+        transition: transform 0.3s ease;
+    }
+    .stat-card:hover { transform: translateY(-5px); }
+
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 1.5rem;
+    }
+    .bg-soft-purple { background: rgba(124, 58, 237, 0.1); }
+    .text-purple { color: var(--accent); }
+
+    /* Responsive adjustment */
+    @media (max-width: 992px) {
+        .sidebar { left: -300px; }
+        .content { margin-left: 0; padding: 20px; }
+        .sidebar.active { left: 20px; }
+    }
+</style>
 </head>
 <body>
 
@@ -41,182 +105,372 @@
         <a href="#" id="manageMaterialsLink"><i class="bi bi-collection me-2"></i> Manage Materials</a>
         <a href="#" id="pendingApprovalsLink"><i class="bi bi-person-check me-2"></i> Pending Approvals</a>
         <a href="#" id="manageUsersLink"><i class="bi bi-people me-2"></i> Manage Users</a>
+        <a href="#" id="homeContentLink"><i class="bi bi-house-gear me-2"></i> Homepage Content</a>
+        <a href="#" id="manageLecturersLink"><i class="bi bi-person-badge me-2"></i> Manage Lecturers</a>
+        <a href="#" id="manageBannersLink"><i class="bi bi-image me-2"></i> Advertisement Banners</a>
     </div>
 
     <div class="content">
-        <div id="uploadMaterialsSection" class="container mt-4 active-section">
-            <h2>Upload Lesson</h2>
-            <div class="card p-4">
-                <form id="uploadForm">
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Lesson Title</label>
-                        <input type="text" id="title" class="form-control" placeholder="Lesson Title" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="url" class="form-label">YouTube Link</label>
-                        <input type="text" id="url" class="form-control" placeholder="YouTube Link" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea id="description" class="form-control" rows="3" placeholder="Brief description of the lesson"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="course" class="form-label">Course</label>
-                        <select id="course" class="form-select">
-                            <option value="Maths">Maths</option>
-                            <option value="Physics">Physics</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-success btn-purple">Upload Now</button>
-                </form>
-            </div>
-        </div>
-
-        <div id="manageMaterialsSection" class="container mt-4 d-none">
-            <h2>Manage Learning Materials</h2>
-            <div class="card p-4">
-                <div id="materialsList" class="row">
-                    <p class="text-center text-muted">Loading materials...</p>
+    <div class="row mb-4 g-3">
+            <div class="row mb-4 g-3">
+    <div class="col-md-3">
+        <div class="stat-card p-3">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="text-muted small fw-bold uppercase">Total Students</div>
+                    <div class="h4 mb-0 fw-bold" id="stat-total-students">---</div>
                 </div>
+                <div class="icon-box bg-soft-purple"><i class="bi bi-people text-purple"></i></div>
             </div>
         </div>
-
-        <div id="pendingApprovalsSection" class="container mt-4 d-none">
-            <h2>Pending User Approvals</h2>
-            <div class="card p-4">
-                <div id="pendingUsersList" class="list-group">
-                    <p class="text-center text-muted">No pending users.</p>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card p-3">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="text-muted small fw-bold uppercase">Pending Approvals</div>
+                    <div class="h4 mb-0 fw-bold text-danger" id="stat-pending-approvals">---</div>
                 </div>
+                <div class="icon-box bg-soft-orange"><i class="bi bi-clock-history text-orange"></i></div>
             </div>
         </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card p-3">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="text-muted small fw-bold uppercase">Materials</div>
+                    <div class="h4 mb-0 fw-bold" id="stat-total-materials">---</div>
+                </div>
+                <div class="icon-box bg-soft-green"><i class="bi bi-collection-play text-success"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card p-3">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="text-muted small fw-bold uppercase">Lecturers</div>
+                    <div class="h4 mb-0 fw-bold" id="stat-total-lecturers">---</div>
+                </div>
+                <div class="icon-box bg-soft-blue"><i class="bi bi-person-badge text-primary"></i></div>
+            </div>
+        </div>
+    </div>
+    </div>
+   
+    <div id="uploadMaterialsSection" class="container mt-4 active-section">
+        <h2>Upload Lesson</h2>
+        <div class="glass-card p-4">
+            <form id="uploadForm">
+                <div class="mb-3">
+                    <label for="title" class="form-label">Lesson Title</label>
+                    <input type="text" id="title" class="form-control" placeholder="Lesson Title" required>
+                </div>
+                <div class="mb-3">
+                    <label for="url" class="form-label">YouTube Link</label>
+                    <input type="text" id="url" class="form-control" placeholder="YouTube Link" required>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea id="description" class="form-control" rows="3" placeholder="Brief description of the lesson"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="course" class="form-label">Course</label>
+                    <select id="course" class="form-select form-control">
+                        <option value="Maths">Maths</option>
+                        <option value="Physics">Physics</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary-custom">Upload Now</button>
+            </form>
+        </div>
+    </div>
 
-        <div id="manageUsersSection" class="container mt-4 d-none">
+    <div id="manageMaterialsSection" class="container mt-4 d-none">
+        <h2>Manage Learning Materials</h2>
+        <div class="glass-card p-4">
+            <div id="materialsList" class="row">
+                <p class="text-center text-secondary">Loading materials...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="pendingApprovalsSection" class="container mt-4 d-none">
+        <h2>Pending User Approvals</h2>
+        <div class="glass-card p-4">
+            <div id="pendingUsersList" class="list-group">
+                <p class="text-center text-secondary">No pending users.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="manageUsersSection" class="container mt-4 d-none">
+        <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Manage Users</h2>
-            <div class="card p-4">
-                <button class="btn btn-purple mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">Add New User</button>
-                <div id="usersList" class="list-group">
-                    <p class="text-center text-muted">Loading users...</p>
-                </div>
+            <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <i class="bi bi-person-plus me-2"></i>Add New User
+            </button>
+        </div>
+        <div class="glass-card p-4">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersList">
+                        <!-- Users will be loaded here -->
+                    </tbody>
+                </table>
             </div>
         </div>
+    </div>
 
-        <!-- Add User Modal -->
-        <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="addUserForm">
-                            <div class="mb-3">
-                                <label for="addUserName" class="form-label">Name</label>
-                                <input type="text" class="form-control" id="addUserName" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="addUserEmail" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="addUserEmail" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="addUserPassword" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="addUserPassword" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="addUserRole" class="form-label">Role</label>
-                                <select class="form-select" id="addUserRole">
-                                    <option value="student">Student</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="addUserCourses" class="form-label">Permitted Courses (comma-separated)</label>
-                                <input type="text" class="form-control" id="addUserCourses" placeholder="Maths, Physics">
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-purple w-100">Add User</button>
-                        </form>
-                    </div>
+    <div id="homeContentSection" class="container mt-4 d-none">
+        <h2>Homepage Content</h2>
+        <div class="glass-card p-4">
+            <form id="homeContentForm">
+                <div class="mb-3">
+                    <label class="form-label">Hero Title</label>
+                    <input type="text" id="hcTitle" class="form-control" required>
                 </div>
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Hero Subtitle</label>
+                    <input type="text" id="hcSubtitle" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Background Image URL</label>
+                    <input type="text" id="hcBg" class="form-control" placeholder="https://...">
+                </div>
+                <button type="submit" class="btn-primary-custom">Update Content</button>
+            </form>
         </div>
+    </div>
 
-        <!-- Edit Material Modal -->
-        <div class="modal fade" id="editMaterialModal" tabindex="-1" aria-labelledby="editMaterialModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editMaterialModalLabel">Edit Material</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="editMaterialForm">
-                            <input type="hidden" id="editMaterialId">
-                            <div class="mb-3">
-                                <label for="editMaterialTitle" class="form-label">Lesson Title</label>
-                                <input type="text" class="form-control" id="editMaterialTitle" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="editMaterialUrl" class="form-label">YouTube Link</label>
-                                <input type="text" class="form-control" id="editMaterialUrl" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="editMaterialDescription" class="form-label">Description</label>
-                                <textarea class="form-control" id="editMaterialDescription" rows="3"></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label for="editMaterialCourse" class="form-label">Course</label>
-                                <select class="form-select" id="editMaterialCourse">
-                                    <option value="Maths">Maths</option>
-                                    <option value="Physics">Physics</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-purple w-100">Save Changes</button>
-                        </form>
-                    </div>
-                </div>
+    <div id="manageLecturersSection" class="container mt-4 d-none">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Manage Lecturers</h2>
+            <button class="btn-primary-custom" onclick="showAddLecturerModal()">
+                <i class="bi bi-person-plus me-2"></i>Add New Lecturer
+            </button>
+        </div>
+        <div class="glass-card p-4">
+            <div id="lecturersList" class="row g-4">
+                <p class="text-center text-secondary">Loading lecturers...</p>
             </div>
         </div>
+    </div>
 
-        <!-- Edit User Modal -->
-        <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div id="manageBannersSection" class="container mt-4 d-none">
+        <h2>Advertisement Banners</h2>
+        <div class="glass-card p-4 mb-4">
+            <form id="addBannerForm">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Title</label>
+                        <input type="text" id="bnTitle" class="form-control" required>
                     </div>
-                    <div class="modal-body">
-                        <form id="editUserForm">
-                            <input type="hidden" id="editUserId">
-                            <div class="mb-3">
-                                <label for="editUserName" class="form-label">Name</label>
-                                <input type="text" class="form-control" id="editUserName" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="editUserEmail" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="editUserEmail" disabled>
-                            </div>
-                            <div class="mb-3">
-                                <label for="editUserRole" class="form-label">Role</label>
-                                <select class="form-select" id="editUserRole">
-                                    <option value="student">Student</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="editUserCourses" class="form-label">Permitted Courses (comma-separated)</label>
-                                <input type="text" class="form-control" id="editUserCourses" placeholder="Maths, Physics">
-                            </div>
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="editUserApproved">
-                                <label class="form-check-label" for="editUserApproved">Approved</label>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-purple w-100">Save Changes</button>
-                        </form>
+                    <div class="col-md-3">
+                        <label class="form-label">Banner Image</label>
+                        <input type="file" id="bnImageFile" class="form-control" accept="image/*" required>
                     </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Link URL</label>
+                        <input type="text" id="bnLink" class="form-control" placeholder="https://...">
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label">Order</label>
+                        <input type="number" id="bnOrder" class="form-control" value="0">
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="bnActive" checked>
+                            <label class="form-check-label text-secondary small">Active</label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary-custom mt-3">Add Banner</button>
+            </form>
+        </div>
+        <div class="glass-card p-4">
+            <div id="bannersList" class="row g-3">
+                <p class="text-center text-secondary">No banners yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content glass-card border-0">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title text-white" id="addUserModalLabel">Add New User</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="addUserForm">
+                        <div class="mb-3">
+                            <label for="addUserName" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="addUserName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="addUserEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="addUserEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="addUserPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="addUserPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="addUserRole" class="form-label">Role</label>
+                            <select class="form-select form-control" id="addUserRole">
+                                <option value="student">Student</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="addUserCourses" class="form-label">Permitted Courses (comma-separated)</label>
+                            <input type="text" class="form-control" id="addUserCourses" placeholder="Maths, Physics">
+                        </div>
+                        <button type="submit" class="btn-primary-custom w-100">Add User</button>
+                    </form>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Edit Material Modal -->
+    <div class="modal fade" id="editMaterialModal" tabindex="-1" aria-labelledby="editMaterialModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content glass-card border-0">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title text-white" id="editMaterialModalLabel">Edit Material</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editMaterialForm">
+                        <input type="hidden" id="editMaterialId">
+                        <div class="mb-3">
+                            <label for="editMaterialTitle" class="form-label">Lesson Title</label>
+                            <input type="text" class="form-control" id="editMaterialTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editMaterialUrl" class="form-label">YouTube Link</label>
+                            <input type="text" class="form-control" id="editMaterialUrl" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editMaterialDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editMaterialDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editMaterialCourse" class="form-label">Course</label>
+                            <select class="form-select form-control" id="editMaterialCourse">
+                                <option value="Maths">Maths</option>
+                                <option value="Physics">Physics</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary-custom w-100">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content glass-card border-0">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title text-white" id="editUserModalLabel">Edit User</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="mb-3">
+                            <label for="editUserName" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="editUserName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editUserEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editUserEmail" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editUserRole" class="form-label">Role</label>
+                            <select class="form-select form-control" id="editUserRole">
+                                <option value="student">Student</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editUserCourses" class="form-label">Permitted Courses (comma-separated)</label>
+                            <input type="text" class="form-control" id="editUserCourses" placeholder="Maths, Physics">
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="editUserApproved">
+                            <label class="form-check-label text-secondary" for="editUserApproved">Approved</label>
+                        </div>
+                        <button type="submit" class="btn-primary-custom w-100">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lecturer Modal -->
+    <div class="modal fade" id="lecturerModal" tabindex="-1" aria-labelledby="lecturerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content glass-card border-0">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title text-white" id="lecturerModalLabel">Lecturer Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="lecturerForm">
+                        <input type="hidden" id="lecturerId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Name</label>
+                                <input type="text" id="lecName" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" id="lecEmail" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Photo</label>
+                            <input type="file" id="lecPhotoFile" class="form-control" accept="image/*">
+                            <small class="text-secondary">Current photo: <span id="currentLecPhoto">None</span></small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Professional Roles (one per line)</label>
+                            <textarea id="lecRoles" class="form-control" rows="4"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Academic & Professional Qualifications (one per line)</label>
+                            <textarea id="lecQuals" class="form-control" rows="4"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Achievements (one per line)</label>
+                            <textarea id="lecAchievements" class="form-control" rows="4"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Specialization Areas (one per line)</label>
+                            <textarea id="lecSpecs" class="form-control" rows="4"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary-custom w-100">Save Lecturer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     </div>
 
@@ -224,7 +478,7 @@
     <script>
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user || user.role !== 'admin') {
-            window.location.href = '/index.html'; // Redirect if not admin
+            window.location.href = '/login.html'; // Redirect if not admin
         }
 
         const sections = { 
@@ -232,6 +486,9 @@
             manageMaterialsSection: document.getElementById('manageMaterialsSection'),
             pendingApprovalsSection: document.getElementById('pendingApprovalsSection'),
             manageUsersSection: document.getElementById('manageUsersSection'),
+            homeContentSection: document.getElementById('homeContentSection'),
+            manageLecturersSection: document.getElementById('manageLecturersSection'),
+            manageBannersSection: document.getElementById('manageBannersSection'),
         };
 
         function showSection(sectionId) {
@@ -250,10 +507,13 @@
         document.getElementById('manageMaterialsLink').addEventListener('click', (e) => { e.preventDefault(); showSection('manageMaterialsSection'); loadMaterialsForAdmin(); });
         document.getElementById('pendingApprovalsLink').addEventListener('click', (e) => { e.preventDefault(); showSection('pendingApprovalsSection'); loadPendingUsers(); });
         document.getElementById('manageUsersLink').addEventListener('click', (e) => { e.preventDefault(); showSection('manageUsersSection'); loadUsersForAdmin(); });
+        document.getElementById('homeContentLink').addEventListener('click', (e) => { e.preventDefault(); showSection('homeContentSection'); loadHomeContentForAdmin(); });
+        document.getElementById('manageLecturersLink').addEventListener('click', (e) => { e.preventDefault(); showSection('manageLecturersSection'); loadLecturersForAdmin(); });
+        document.getElementById('manageBannersLink').addEventListener('click', (e) => { e.preventDefault(); showSection('manageBannersSection'); loadBannersForAdmin(); });
 
         document.getElementById('logoutBtn').addEventListener('click', () => {
             localStorage.removeItem('user');
-            window.location.href = '/index.html';
+            window.location.href = '/';
         });
 
         // --- Upload Material --- (existing functionality updated)
@@ -279,6 +539,251 @@
             }
         };
 
+        async function loadHomeContentForAdmin() {
+            try {
+                const res = await fetch('/admin/home-content');
+                const data = await res.json();
+                document.getElementById('hcTitle').value = data.heroTitle || '';
+                document.getElementById('hcSubtitle').value = data.heroSubtitle || '';
+                document.getElementById('hcBg').value = data.backgroundUrl || '';
+            } catch {}
+        }
+
+        document.getElementById('homeContentForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = {
+                heroTitle: document.getElementById('hcTitle').value,
+                heroSubtitle: document.getElementById('hcSubtitle').value,
+                backgroundUrl: document.getElementById('hcBg').value
+            };
+            const res = await fetch('/admin/home-content', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                alert('Homepage content saved');
+            } else {
+                alert('Failed to save');
+            }
+        };
+
+        async function loadBannersForAdmin() {
+            try {
+                const res = await fetch('/admin/banners');
+                const banners = await res.json();
+                const list = document.getElementById('bannersList');
+                list.innerHTML = '';
+                if (!banners.length) {
+                    list.innerHTML = '<p class="text-center text-muted">No banners yet.</p>';
+                    return;
+                }
+                banners.forEach(b => {
+                    list.innerHTML += `
+                        <div class="col-md-4">
+                            <div class="glass-card h-100 overflow-hidden">
+                                <img src="${b.imageUrl}" class="card-img-top" alt="${b.title}" style="height: 150px; object-fit: cover;">
+                                <div class="p-3">
+                                    <h6 class="text-white mb-1">${b.title}</h6>
+                                    <p class="text-secondary small mb-3 text-truncate">${b.linkUrl || 'No link'}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="form-check mb-0">
+                                            <input class="form-check-input" type="checkbox" ${b.active ? 'checked' : ''} onchange="toggleBannerActive('${b._id}', this.checked)">
+                                            <label class="form-check-label text-secondary small">Active</label>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-danger border-0" onclick="deleteBanner('${b._id}')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch {}
+        }
+
+        document.getElementById('addBannerForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const fd = new FormData();
+            fd.append('title', document.getElementById('bnTitle').value);
+            fd.append('linkUrl', document.getElementById('bnLink').value);
+            fd.append('order', parseInt(document.getElementById('bnOrder').value || '0', 10));
+            fd.append('active', document.getElementById('bnActive').checked ? 'true' : 'false');
+            const fileInput = document.getElementById('bnImageFile');
+            if (fileInput.files[0]) fd.append('image', fileInput.files[0]);
+            const res = await fetch('/admin/banners', { method: 'POST', body: fd });
+            if (res.ok) {
+                e.target.reset();
+                loadBannersForAdmin();
+            } else {
+                alert('Failed to add banner');
+            }
+        };
+
+        async function deleteBanner(id) {
+            if (!confirm('Delete this banner?')) return;
+            const res = await fetch('/admin/banners/' + id, { method: 'DELETE' });
+            if (res.ok) loadBannersForAdmin(); else alert('Delete failed');
+        }
+
+        async function toggleBannerActive(id, active) {
+            const res = await fetch('/admin/banners/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ active })
+            });
+            if (!res.ok) alert('Update failed');
+        }
+
+        // --- Lecturer Management ---
+        async function loadLecturersForAdmin() {
+            try {
+                const res = await fetch('/admin/lecturers');
+                const lecturers = await res.json();
+                const list = document.getElementById('lecturersList');
+                list.innerHTML = '';
+                if (!lecturers.length) {
+                    list.innerHTML = '<div class="col-12 text-center text-secondary py-5">No lecturers found.</div>';
+                    return;
+                }
+                lecturers.forEach(l => {
+                    list.innerHTML += `
+                        <div class="col-md-6 col-lg-4">
+                            <div class="glass-card h-100 overflow-hidden">
+                                <div class="p-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="rounded-circle overflow-hidden me-3" style="width: 60px; height: 60px; border: 2px solid var(--accent);">
+                                            <img src="${l.photoUrl || 'https://via.placeholder.com/60'}" style="width: 100%; height: 100%; object-fit: cover;">
+                                        </div>
+                                        <div>
+                                            <h6 class="text-white mb-0">${l.name}</h6>
+                                            <small class="text-secondary">${l.email}</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-outline-primary w-100" onclick="editLecturer('${l._id}')">Edit</button>
+                                        <button class="btn btn-sm btn-outline-danger w-100" onclick="deleteLecturer('${l._id}')">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                console.error("Error loading lecturers:", err);
+            }
+        }
+
+        function showAddLecturerModal() {
+            document.getElementById('lecturerModalLabel').innerText = 'Add New Lecturer';
+            document.getElementById('lecturerForm').reset();
+            document.getElementById('lecturerId').value = '';
+            document.getElementById('currentLecPhoto').innerText = 'None';
+            new bootstrap.Modal(document.getElementById('lecturerModal')).show();
+        }
+
+        async function editLecturer(id) {
+            try {
+                const res = await fetch('/admin/lecturers');
+                const lecturers = await res.json();
+                const l = lecturers.find(item => item._id === id);
+                if (!l) return;
+
+                document.getElementById('lecturerModalLabel').innerText = 'Edit Lecturer';
+                document.getElementById('lecturerId').value = l._id;
+                document.getElementById('lecName').value = l.name || '';
+                document.getElementById('lecEmail').value = l.email || '';
+                document.getElementById('currentLecPhoto').innerText = l.photoUrl ? l.photoUrl.split('/').pop() : 'None';
+                document.getElementById('lecRoles').value = (l.professionalRoles || []).join('\n');
+                document.getElementById('lecQuals').value = (l.qualifications || []).join('\n');
+                document.getElementById('lecAchievements').value = (l.achievements || []).join('\n');
+                document.getElementById('lecSpecs').value = (l.specializationAreas || []).join('\n');
+
+                new bootstrap.Modal(document.getElementById('lecturerModal')).show();
+            } catch (err) {
+                console.error("Error fetching lecturer details:", err);
+            }
+        }
+
+        document.getElementById('lecturerForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('lecturerId').value;
+            const formData = new FormData();
+            
+            formData.append('name', document.getElementById('lecName').value);
+            formData.append('email', document.getElementById('lecEmail').value);
+            
+            const photoFile = document.getElementById('lecPhotoFile').files[0];
+            if (photoFile) {
+                formData.append('photo', photoFile);
+            }
+
+            const roles = document.getElementById('lecRoles').value.split('\n').filter(r => r.trim() !== "");
+            const quals = document.getElementById('lecQuals').value.split('\n').filter(r => r.trim() !== "");
+            const achievements = document.getElementById('lecAchievements').value.split('\n').filter(r => r.trim() !== "");
+            const specs = document.getElementById('lecSpecs').value.split('\n').filter(r => r.trim() !== "");
+
+            formData.append('professionalRoles', JSON.stringify(roles));
+            formData.append('qualifications', JSON.stringify(quals));
+            formData.append('achievements', JSON.stringify(achievements));
+            formData.append('specializationAreas', JSON.stringify(specs));
+
+            const url = id ? `/admin/lecturers/${id}` : '/admin/lecturers';
+            const method = id ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method: method,
+                body: formData
+            });
+
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('lecturerModal')).hide();
+                loadLecturersForAdmin();
+                refreshDashboardStats();
+            } else {
+                const data = await res.json();
+                alert(data.msg || 'Operation failed');
+            }
+        };
+
+        async function deleteLecturer(id) {
+            if (!confirm('Are you sure you want to delete this lecturer?')) return;
+            const res = await fetch(`/admin/lecturers/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadLecturersForAdmin();
+                refreshDashboardStats();
+            } else {
+                alert('Delete failed');
+            }
+        }
+
+        async function refreshDashboardStats() {
+    try {
+        // 1. Fetch data from your backend API
+        const response = await fetch('/api/admin/stats');
+        const data = await response.json();
+
+        // 2. Update the UI with real numbers
+        document.getElementById('stat-total-students').innerText = data.totalStudents;
+        document.getElementById('stat-pending-approvals').innerText = data.pendingCount;
+        document.getElementById('stat-total-materials').innerText = data.totalMaterials;
+        document.getElementById('stat-total-lecturers').innerText = data.totalLecturers;
+        
+        // Add visual feedback if pending is high
+        if(data.pendingCount > 10) {
+            document.getElementById('stat-pending-approvals').classList.add('pulse-animation');
+        }
+    } catch (error) {
+        console.error("Failed to load ITSM stats:", error);
+        // Fallback to 0 or Error state
+        document.querySelectorAll('.h4').forEach(el => el.innerText = "Error");
+    }
+}
+
+// Run on page load
+document.addEventListener('DOMContentLoaded', refreshDashboardStats);
+
         // --- Material Management --- (new functionality)
         async function loadMaterialsForAdmin() {
             const response = await fetch('/admin/materials');
@@ -292,14 +797,16 @@
             materials.forEach(material => {
                 container.innerHTML += `
                     <div class="col-md-6 mb-3">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">${material.title}</h5>
-                                <p class="card-text">${material.description || 'No description'}</p>
-                                <p class="card-text">Course: ${material.courseName}</p>
-                                <p class="card-text"><a href="${material.youtubeUrl}" target="_blank">${material.youtubeUrl}</a></p>
-                                <button class="btn btn-primary btn-sm me-2 edit-material-btn" data-id="${material._id}">Edit</button>
-                                <button class="btn btn-danger btn-sm delete-material-btn" data-id="${material._id}">Delete</button>
+                        <div class="glass-card p-3 h-100">
+                            <h5 class="text-white mb-2">${material.title}</h5>
+                            <p class="text-secondary small mb-2">${material.description || 'No description'}</p>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="badge bg-primary me-2">${material.courseName}</span>
+                                <a href="${material.youtubeUrl}" target="_blank" class="text-info small text-truncate">${material.youtubeUrl}</a>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-light edit-material-btn" data-id="${material._id}">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger delete-material-btn" data-id="${material._id}">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -361,6 +868,8 @@
                 alert("Failed to delete material.");
             }
         }
+
+        
 
         // --- Pending User Approvals --- (new functionality)
         async function loadPendingUsers() {
@@ -538,6 +1047,7 @@
         // Initial load of sections
         // Default to upload materials or current active based on user preference
         showSection('uploadMaterialsSection');
+        
         
     </script>
 </body>
