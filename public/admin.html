@@ -71,8 +71,8 @@
         border-radius: 12px;
         font-size: 1.5rem;
     }
-    .bg-soft-purple { background: rgba(124, 58, 237, 0.1); }
-    .text-purple { color: var(--accent); }
+    .bg-soft-red { background: rgba(180, 18, 27, 0.1); }
+    .text-red { color: var(--accent); }
 
     /* Responsive adjustment */
     @media (max-width: 992px) {
@@ -121,7 +121,7 @@
                     <div class="text-muted small fw-bold uppercase">Total Students</div>
                     <div class="h4 mb-0 fw-bold" id="stat-total-students">---</div>
                 </div>
-                <div class="icon-box bg-soft-purple"><i class="bi bi-people text-purple"></i></div>
+                <div class="icon-box bg-soft-red"><i class="bi bi-people text-red"></i></div>
             </div>
         </div>
     </div>
@@ -180,16 +180,18 @@
                     <input type="text" id="url" class="form-control" placeholder="YouTube Link">
                 </div>
                 <div id="fileInput" class="mb-3 d-none">
-                    <label for="materialFile" class="form-label">Upload File (PDF, JPG, PNG)</label>
-                    <input type="file" id="materialFile" class="form-control" accept=".pdf, .jpg, .jpeg, .png">
+                    <label for="materialUrl" class="form-label">Document Link (Google Drive / Direct Link)</label>
+                    <input type="text" id="materialUrl" class="form-control" placeholder="https://drive.google.com/...">
                 </div>
                 <div class="mb-3">
                     <label for="description" class="form-label">Description</label>
                     <textarea id="description" class="form-control" rows="3" placeholder="Brief description"></textarea>
                 </div>
                 <div class="mb-3">
-                    <label for="course" class="form-label">Course Name</label>
-                    <input type="text" id="course" class="form-control" placeholder="Enter Course Name (e.g., Marketing, Coding)" required>
+                    <label for="materialLecturer" class="form-label">Assign to Lecturer</label>
+                    <select id="materialLecturer" class="form-select form-control">
+                        <option value="">Public Material (No Lecturer)</option>
+                    </select>
                 </div>
                 <button type="submit" class="btn-primary-custom">Upload Now</button>
             </form>
@@ -197,7 +199,15 @@
     </div>
 
     <div id="manageMaterialsSection" class="container mt-4 d-none">
-        <h2>Manage Learning Materials</h2>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Manage Learning Materials</h2>
+            <div class="d-flex gap-2">
+                <select id="adminMaterialFilter" class="form-select form-control" style="width: 250px;" onchange="loadMaterialsForAdmin()">
+                    <option value="">All Materials</option>
+                    <option value="public">Public Only</option>
+                </select>
+            </div>
+        </div>
         <div class="glass-card p-4">
             <div id="materialsList" class="row">
                 <p class="text-center text-secondary">Loading materials...</p>
@@ -217,7 +227,7 @@
     <div id="manageUsersSection" class="container mt-4 d-none">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Manage Users</h2>
-            <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <button class="btn-primary-custom" onclick="openAddUserModal()">
                 <i class="bi bi-person-plus me-2"></i>Add New User
             </button>
         </div>
@@ -229,6 +239,7 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
+                            <th>Lecturers</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -309,8 +320,8 @@
                         <input type="text" id="bnTitle" class="form-control" required>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Banner Image</label>
-                        <input type="file" id="bnImageFile" class="form-control" accept="image/*" required>
+                        <label class="form-label">Banner Image URL</label>
+                        <input type="text" id="bnImageUrl" class="form-control" placeholder="https://..." required>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Link URL</label>
@@ -363,12 +374,20 @@
                             <label for="addUserRole" class="form-label">Role</label>
                             <select class="form-select form-control" id="addUserRole">
                                 <option value="student">Student</option>
+                                <option value="lecturer">Lecturer</option>
                                 <option value="admin">Admin</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label for="addUserCourses" class="form-label">Permitted Courses (comma-separated)</label>
                             <input type="text" class="form-control" id="addUserCourses" placeholder="Maths, Physics">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Assign Lecturers</label>
+                            <div id="addUserLecturersContainer" class="glass-card p-3" style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2);">
+                                <!-- Checkboxes will be loaded here -->
+                                <div class="text-secondary small">Loading lecturers...</div>
+                            </div>
                         </div>
                         <button type="submit" class="btn-primary-custom w-100">Add User</button>
                     </form>
@@ -397,20 +416,18 @@
                             <input type="text" class="form-control" id="editMaterialUrl">
                         </div>
                         <div class="mb-3 d-none" id="editFileInput">
-                            <label class="form-label">File Link (View Only)</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="editMaterialFileUrl" readonly>
-                                <a href="#" id="editMaterialFileView" target="_blank" class="btn btn-outline-info">View</a>
-                            </div>
-                            <small class="text-secondary">File updates are currently not supported via edit. Please re-upload if needed.</small>
+                            <label class="form-label">Document Link (Google Drive)</label>
+                            <input type="text" class="form-control" id="editMaterialFileUrl">
                         </div>
                         <div class="mb-3">
                             <label for="editMaterialDescription" class="form-label">Description</label>
                             <textarea class="form-control" id="editMaterialDescription" rows="3"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="editMaterialCourse" class="form-label">Course Name</label>
-                            <input type="text" class="form-control" id="editMaterialCourse" placeholder="Enter Course Name" required>
+                            <label for="editMaterialLecturer" class="form-label">Assign to Lecturer</label>
+                            <select id="editMaterialLecturer" class="form-select form-control">
+                                <option value="">Public Material (No Lecturer)</option>
+                            </select>
                         </div>
                         <button type="submit" class="btn-primary-custom w-100">Save Changes</button>
                     </form>
@@ -442,12 +459,20 @@
                             <label for="editUserRole" class="form-label">Role</label>
                             <select class="form-select form-control" id="editUserRole">
                                 <option value="student">Student</option>
+                                <option value="lecturer">Lecturer</option>
                                 <option value="admin">Admin</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label for="editUserCourses" class="form-label">Permitted Courses (comma-separated)</label>
                             <input type="text" class="form-control" id="editUserCourses" placeholder="Maths, Physics">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Assigned Lecturers</label>
+                            <div id="editUserLecturersContainer" class="glass-card p-3" style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2);">
+                                <!-- Checkboxes will be loaded here -->
+                                <div class="text-secondary small">Loading lecturers...</div>
+                            </div>
                         </div>
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="editUserApproved">
@@ -511,6 +536,35 @@
 
     </div>
 
+    <!-- Approve User Modal -->
+    <div class="modal fade" id="approveUserModal" tabindex="-1" aria-labelledby="approveUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content glass-card border-0">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title text-white" id="approveUserModalLabel">Approve Student</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="approveUserForm">
+                        <input type="hidden" id="approveUserId">
+                        <div class="mb-3">
+                            <label class="form-label text-white">Student: <span id="approveUserNameDisplay" class="text-info"></span></label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Assign Lecturers</label>
+                            <div id="approveLecturerContainer" class="glass-card p-3" style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2);">
+                                <!-- Checkboxes will be loaded here -->
+                                <div class="text-secondary small">Loading lecturers...</div>
+                            </div>
+                            <small class="text-secondary">Assigning lecturers determines which learning materials the student sees.</small>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Confirm Approval & Assign</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/config.js"></script>
     <script>
@@ -543,7 +597,12 @@
         }
 
         document.getElementById('uploadMaterialsLink').addEventListener('click', (e) => { e.preventDefault(); showSection('uploadMaterialsSection'); });
-        document.getElementById('manageMaterialsLink').addEventListener('click', (e) => { e.preventDefault(); showSection('manageMaterialsSection'); loadMaterialsForAdmin(); });
+        document.getElementById('manageMaterialsLink').addEventListener('click', (e) => { 
+            e.preventDefault(); 
+            showSection('manageMaterialsSection'); 
+            loadLecturersForDropdown('adminMaterialFilter');
+            loadMaterialsForAdmin(); 
+        });
         document.getElementById('pendingApprovalsLink').addEventListener('click', (e) => { e.preventDefault(); showSection('pendingApprovalsSection'); loadPendingUsers(); });
         document.getElementById('manageUsersLink').addEventListener('click', (e) => { e.preventDefault(); showSection('manageUsersSection'); loadUsersForAdmin(); });
         document.getElementById('homeContentLink').addEventListener('click', (e) => { e.preventDefault(); showSection('homeContentSection'); loadHomeContentForAdmin(); });
@@ -551,46 +610,122 @@
         document.getElementById('profileRequestsLink').addEventListener('click', (e) => { e.preventDefault(); showSection('profileRequestsSection'); loadProfileRequests(); });
         document.getElementById('manageBannersLink').addEventListener('click', (e) => { e.preventDefault(); showSection('manageBannersSection'); loadBannersForAdmin(); });
 
+        // --- Helper to Load Lecturers for Dropdowns/Checkboxes ---
+        async function loadLecturersForDropdown(selectId) {
+            try {
+                const res = await fetch(API_URL + '/admin/lecturers');
+                const lecturers = await res.json();
+                const container = document.getElementById(selectId);
+                
+                if (container.tagName === 'SELECT') {
+                    // Handle dropdown
+                    const firstOption = container.options[0];
+                    container.innerHTML = '';
+                    if (firstOption) {
+                        // Ensure "Public Material" is the first option for relevant selects
+                        if (selectId === 'materialLecturer' || selectId === 'editMaterialLecturer') {
+                            container.innerHTML = '<option value="">Public Material (No Lecturer)</option>';
+                        } else if (selectId === 'adminMaterialFilter') {
+                            container.innerHTML = '<option value="">All Materials</option><option value="public">Public Only</option>';
+                        } else {
+                            container.appendChild(firstOption);
+                        }
+                    }
+
+                    lecturers.forEach(lec => {
+                        const opt = document.createElement('option');
+                        opt.value = lec._id;
+                        opt.textContent = lec.name;
+                        container.appendChild(opt);
+                    });
+                } else {
+                    // Handle checkbox container
+                    container.innerHTML = '';
+                    if (lecturers.length === 0) {
+                        container.innerHTML = '<div class="text-secondary small">No lecturers found.</div>';
+                        return;
+                    }
+                    lecturers.forEach(lec => {
+                        const div = document.createElement('div');
+                        div.className = 'form-check mb-1';
+                        div.innerHTML = `
+                            <input class="form-check-input" type="checkbox" value="${lec._id}" id="lec_${selectId}_${lec._id}">
+                            <label class="form-check-label text-white small" for="lec_${selectId}_${lec._id}">
+                                ${lec.name}
+                            </label>
+                        `;
+                        container.appendChild(div);
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to load lecturers:", err);
+            }
+        }
+
+        // Initialize Upload Material Lecturer Dropdown
+        loadLecturersForDropdown('materialLecturer');
+
         // Toggle Material Type Inputs
         document.getElementById('materialType').addEventListener('change', function() {
             if (this.value === 'recording') {
                 document.getElementById('youtubeInput').classList.remove('d-none');
                 document.getElementById('fileInput').classList.add('d-none');
                 document.getElementById('url').required = true;
-                document.getElementById('materialFile').required = false;
+                document.getElementById('materialUrl').required = false;
             } else {
                 document.getElementById('youtubeInput').classList.add('d-none');
                 document.getElementById('fileInput').classList.remove('d-none');
                 document.getElementById('url').required = false;
-                document.getElementById('materialFile').required = true;
+                document.getElementById('materialUrl').required = true;
             }
         });
 
-        // --- Upload Material --- (updated to handle FormData and multi-type)
+        // --- Upload Material --- (updated to handle Google Drive Links)
         document.getElementById('uploadForm').onsubmit = async (e) => {
             e.preventDefault();
-            const formData = new FormData();
-            formData.append('type', document.getElementById('materialType').value);
-            formData.append('title', document.getElementById('title').value);
-            formData.append('description', document.getElementById('description').value);
-            formData.append('courseName', document.getElementById('course').value);
+            const type = document.getElementById('materialType').value;
+            const title = document.getElementById('title').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const lecturerId = document.getElementById('materialLecturer').value;
+            const youtubeUrl = document.getElementById('url').value.trim();
+            const fileUrl = document.getElementById('materialUrl').value.trim();
 
-            if (document.getElementById('materialType').value === 'recording') {
-                formData.append('youtubeUrl', document.getElementById('url').value);
+            if (!title) {
+                alert("Please provide a title");
+                return;
+            }
+
+            if (type === 'recording' && !youtubeUrl) {
+                alert("YouTube URL is required for recordings");
+                return;
+            }
+
+            if (type === 'document' && !fileUrl) {
+                alert("Document URL (e.g. Google Drive) is required");
+                return;
+            }
+
+            const data = {
+                type: type,
+                title: title,
+                description: description,
+                lecturerId: lecturerId || null
+            };
+
+            if (type === 'recording') {
+                data.youtubeUrl = youtubeUrl;
             } else {
-                const fileInput = document.getElementById('materialFile');
-                if (fileInput.files[0]) {
-                    formData.append('file', fileInput.files[0]);
-                }
+                data.fileUrl = fileUrl;
             }
 
             const res = await fetch(API_URL + '/admin/upload', {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
             });
             const result = await res.json();
             if(res.ok) {
-                alert(result.msg);
+                alert(result.msg || "Material uploaded successfully!");
                 e.target.reset();
                 // Reset inputs display
                 document.getElementById('youtubeInput').classList.remove('d-none');
@@ -598,7 +733,7 @@
                 loadMaterialsForAdmin();
                 refreshDashboardStats();
             } else {
-                alert(result.msg || "Failed to upload material.");
+                alert("Upload failed: " + (result.msg || "Unknown error"));
             }
         };
 
@@ -631,6 +766,16 @@
             }
         };
 
+        function formatGoogleDriveLink(url) {
+            if (url && url.includes('drive.google.com')) {
+                const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                if (match && match[1]) {
+                    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                }
+            }
+            return url;
+        }
+
         async function loadBannersForAdmin() {
             try {
                 const res = await fetch(API_URL + '/admin/banners');
@@ -642,10 +787,11 @@
                     return;
                 }
                 banners.forEach(b => {
+                    const previewUrl = formatGoogleDriveLink(b.imageUrl);
                     list.innerHTML += `
                         <div class="col-md-4">
                             <div class="glass-card h-100 overflow-hidden">
-                                <img src="${b.imageUrl}" class="card-img-top" alt="${b.title}" style="height: 150px; object-fit: cover;">
+                                <img src="${previewUrl}" class="card-img-top" alt="${b.title}" style="height: 150px; object-fit: cover;">
                                 <div class="p-3">
                                     <h6 class="text-white mb-1">${b.title}</h6>
                                     <p class="text-secondary small mb-3 text-truncate">${b.linkUrl || 'No link'}</p>
@@ -668,14 +814,18 @@
 
         document.getElementById('addBannerForm').onsubmit = async (e) => {
             e.preventDefault();
-            const fd = new FormData();
-            fd.append('title', document.getElementById('bnTitle').value);
-            fd.append('linkUrl', document.getElementById('bnLink').value);
-            fd.append('order', parseInt(document.getElementById('bnOrder').value || '0', 10));
-            fd.append('active', document.getElementById('bnActive').checked ? 'true' : 'false');
-            const fileInput = document.getElementById('bnImageFile');
-            if (fileInput.files[0]) fd.append('image', fileInput.files[0]);
-            const res = await fetch(API_URL + '/admin/banners', { method: 'POST', body: fd });
+            const data = {
+                title: document.getElementById('bnTitle').value,
+                linkUrl: document.getElementById('bnLink').value,
+                order: parseInt(document.getElementById('bnOrder').value || '0', 10),
+                active: document.getElementById('bnActive').checked,
+                imageUrl: document.getElementById('bnImageUrl').value
+            };
+            const res = await fetch(API_URL + '/admin/banners', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
             if (res.ok) {
                 e.target.reset();
                 loadBannersForAdmin();
@@ -849,8 +999,21 @@ document.addEventListener('DOMContentLoaded', refreshDashboardStats);
 
         // --- Material Management --- (new functionality)
         async function loadMaterialsForAdmin() {
-            const response = await fetch(API_URL + '/admin/materials');
-            const materials = await response.json();
+            const filterValue = document.getElementById('adminMaterialFilter').value;
+            let url = API_URL + '/admin/materials';
+            
+            if (filterValue && filterValue !== 'public') {
+                url += `?lecturerId=${filterValue}`;
+            }
+
+            const response = await fetch(url);
+            let materials = await response.json();
+
+            // Client-side filtering for public materials if filter is set to 'public'
+            if (filterValue === 'public') {
+                materials = materials.filter(m => !m.lecturerId);
+            }
+
             const container = document.getElementById('materialsList');
             container.innerHTML = '';
             if (materials.length === 0) {
@@ -868,7 +1031,6 @@ document.addEventListener('DOMContentLoaded', refreshDashboardStats);
                             <h5 class="text-white mb-2">${materialIcon}${material.title}</h5>
                             <p class="text-secondary small mb-2">${material.description || 'No description'}</p>
                             <div class="d-flex align-items-center mb-3">
-                                <span class="badge bg-primary me-2">${material.courseName}</span>
                                 <a href="${link}" target="_blank" class="text-info small text-truncate">${link}</a>
                             </div>
                             <div class="d-flex gap-2">
@@ -893,7 +1055,10 @@ document.addEventListener('DOMContentLoaded', refreshDashboardStats);
             document.getElementById('editMaterialId').value = material._id;
             document.getElementById('editMaterialTitle').value = material.title;
             document.getElementById('editMaterialDescription').value = material.description;
-            document.getElementById('editMaterialCourse').value = material.courseName;
+            
+            // Populate lecturer dropdown first, then set value
+            await loadLecturersForDropdown('editMaterialLecturer');
+            document.getElementById('editMaterialLecturer').value = material.lecturerId || '';
 
             if (material.type === 'recording') {
                 document.getElementById('editYoutubeInput').classList.remove('d-none');
@@ -903,7 +1068,6 @@ document.addEventListener('DOMContentLoaded', refreshDashboardStats);
                 document.getElementById('editYoutubeInput').classList.add('d-none');
                 document.getElementById('editFileInput').classList.remove('d-none');
                 document.getElementById('editMaterialFileUrl').value = material.fileUrl || '';
-                document.getElementById('editMaterialFileView').href = material.fileUrl || '#';
             }
 
             var editMaterialModal = new bootstrap.Modal(document.getElementById('editMaterialModal'));
@@ -916,8 +1080,9 @@ document.addEventListener('DOMContentLoaded', refreshDashboardStats);
             const data = {
                 title: document.getElementById('editMaterialTitle').value,
                 youtubeUrl: document.getElementById('editMaterialUrl').value,
+                fileUrl: document.getElementById('editMaterialFileUrl').value,
                 description: document.getElementById('editMaterialDescription').value,
-                courseName: document.getElementById('editMaterialCourse').value
+                lecturerId: document.getElementById('editMaterialLecturer').value || null
             };
             const res = await fetch(API_URL + `/admin/materials/${id}`, {
                 method: 'PUT',
@@ -967,32 +1132,45 @@ document.addEventListener('DOMContentLoaded', refreshDashboardStats);
                             <small>Registered: ${new Date(user.createdAt).toLocaleDateString()}</small>
                         </div>
                         <div>
-                            <button class="btn btn-success btn-sm me-2 approve-user-btn" data-id="${user._id}">Approve</button>
+                            <button class="btn btn-success btn-sm me-2" onclick="openApproveModal('${user._id}', '${user.name}')">Approve</button>
                             <button class="btn btn-danger btn-sm reject-user-btn" data-id="${user._id}">Reject</button>
                         </div>
                     </div>
                 `;
-            });
-            document.querySelectorAll('.approve-user-btn').forEach(button => {
-                button.addEventListener('click', (e) => approveUser(e.target.dataset.id));
             });
             document.querySelectorAll('.reject-user-btn').forEach(button => {
                 button.addEventListener('click', (e) => rejectUser(e.target.dataset.id));
             });
         }
 
-        async function approveUser(id) {
+        async function openApproveModal(id, name) {
+            document.getElementById('approveUserId').value = id;
+            document.getElementById('approveUserNameDisplay').innerText = name;
+            await loadLecturersForDropdown('approveLecturerContainer');
+            new bootstrap.Modal(document.getElementById('approveUserModal')).show();
+        }
+
+        document.getElementById('approveUserForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('approveUserId').value;
+            const container = document.getElementById('approveLecturerContainer');
+            const assignedLecturers = Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+            
             const res = await fetch(API_URL + `/admin/approve-user/${id}`, {
-                method: 'POST'
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ assignedLecturers })
             });
             if(res.ok) {
                 alert("User approved successfully!");
+                bootstrap.Modal.getInstance(document.getElementById('approveUserModal')).hide();
                 loadPendingUsers();
                 loadUsersForAdmin(); // Refresh all users list
+                refreshDashboardStats();
             } else {
-                alert("Failed to approve user.");
+                alert("Approval failed.");
             }
-        }
+        };
 
         async function rejectUser(id) {
             if (!confirm("Are you sure you want to reject this user?")) return;
@@ -1018,17 +1196,19 @@ document.addEventListener('DOMContentLoaded', refreshDashboardStats);
                 return;
             }
             users.forEach(user => {
+                const lecturers = (user.assignedLecturers || []).map(l => l.name || 'Unknown').join(', ') || '<span class="text-muted">None</span>';
                 container.innerHTML += `
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5>${user.name} (${user.email}) <span class="badge bg-${user.role === 'admin' ? 'danger' : 'primary'}">${user.role}</span></h5>
-                            <small>Approved: ${user.isApproved ? 'Yes' : 'No'} | Courses: ${user.permittedCourses.join(', ') || 'None'}</small>
-                        </div>
-                        <div>
+                    <tr>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td><span class="badge bg-${user.role === 'admin' ? 'danger' : 'primary'}">${user.role}</span></td>
+                        <td class="small">${lecturers}</td>
+                        <td><span class="badge bg-${user.isApproved ? 'success' : 'warning'}">${user.isApproved ? 'Approved' : 'Pending'}</span></td>
+                        <td>
                             <button class="btn btn-info btn-sm me-2 edit-user-btn" data-id="${user._id}">Edit</button>
                             <button class="btn btn-danger btn-sm delete-user-btn" data-id="${user._id}">Delete</button>
-                        </div>
-                    </div>
+                        </td>
+                    </tr>
                 `;
             });
             document.querySelectorAll('.edit-user-btn').forEach(button => {
@@ -1039,6 +1219,12 @@ document.addEventListener('DOMContentLoaded', refreshDashboardStats);
             });
         }
 
+        async function openAddUserModal() {
+            document.getElementById('addUserForm').reset();
+            await loadLecturersForDropdown('addUserLecturersContainer');
+            new bootstrap.Modal(document.getElementById('addUserModal')).show();
+        }
+
         document.getElementById('addUserForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('addUserName').value;
@@ -1046,12 +1232,15 @@ document.addEventListener('DOMContentLoaded', refreshDashboardStats);
             const password = document.getElementById('addUserPassword').value;
             const role = document.getElementById('addUserRole').value;
             const permittedCourses = document.getElementById('addUserCourses').value.split(',').map(c => c.trim()).filter(c => c);
+            
+            const container = document.getElementById('addUserLecturersContainer');
+            const assignedLecturers = Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
 
             try {
                 const res = await fetch(API_URL + '/admin/users', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name, email, password, role, permittedCourses })
+                    body: JSON.stringify({ name, email, password, role, permittedCourses, assignedLecturers })
                 });
                 const data = await res.json();
                 if(res.ok) {
@@ -1078,6 +1267,16 @@ document.addEventListener('DOMContentLoaded', refreshDashboardStats);
             document.getElementById('editUserEmail').value = user.email;
             document.getElementById('editUserRole').value = user.role;
             document.getElementById('editUserCourses').value = user.permittedCourses.join(', ');
+            
+            await loadLecturersForDropdown('editUserLecturersContainer');
+            
+            // Set checkbox values
+            const container = document.getElementById('editUserLecturersContainer');
+            const assignedIds = user.assignedLecturers || [];
+            container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.checked = assignedIds.includes(cb.value);
+            });
+            
             document.getElementById('editUserApproved').checked = user.isApproved;
             var editUserModal = new bootstrap.Modal(document.getElementById('editUserModal'));
             editUserModal.show();
@@ -1086,10 +1285,16 @@ document.addEventListener('DOMContentLoaded', refreshDashboardStats);
         document.getElementById('editUserForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('editUserId').value;
+            
+            const container = document.getElementById('editUserLecturersContainer');
+            const assignedLecturers = Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+
             const data = {
                 name: document.getElementById('editUserName').value,
+                email: document.getElementById('editUserEmail').value,
                 role: document.getElementById('editUserRole').value,
                 permittedCourses: document.getElementById('editUserCourses').value.split(',').map(c => c.trim()).filter(c => c),
+                assignedLecturers: assignedLecturers,
                 isApproved: document.getElementById('editUserApproved').checked
             };
             const res = await fetch(API_URL + `/admin/users/${id}`, {

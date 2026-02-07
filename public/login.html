@@ -57,7 +57,13 @@
             const data = await res.json();
             if(res.ok) {
                 localStorage.setItem('user', JSON.stringify(data));
-                window.location.href = data.role === 'admin' ? '/admin.html' : '/student.html';
+                if (data.role === 'admin') {
+                    window.location.href = '/admin.html';
+                } else if (data.role === 'lecturer') {
+                    window.location.href = '/lecturer.html';
+                } else {
+                    window.location.href = '/student.html';
+                }
             } else {
                 alert("Login Failed: " + data.msg);
             }

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecturer Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+<style>
+    .sidebar { 
+        height: calc(100vh - 40px); 
+        width: 260px; 
+        position: fixed; 
+        top: 20px; 
+        left: 20px; 
+        background: var(--bg-card);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        box-shadow: var(--glass-shadow);
+        padding-top: 30px;
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+
+    .sidebar a { 
+        padding: 12px 25px; 
+        margin: 8px 15px;
+        text-decoration: none; 
+        font-size: 0.95rem; 
+        color: var(--text-secondary); 
+        display: flex;
+        align-items: center;
+        border-radius: 12px;
+        transition: 0.2s;
+    }
+
+    .sidebar a i { font-size: 1.2rem; }
+
+    .sidebar a:hover, .sidebar a.active { 
+        background: var(--accent);
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 4px 15px var(--accent-glow);
+    }
+
+    .content { margin-left: 300px; padding: 40px 40px 40px 20px; }
+
+    h2 { font-weight: 700; margin-bottom: 25px; color: var(--text-primary); }
+
+    .stat-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        box-shadow: var(--glass-shadow);
+        transition: transform 0.3s ease;
+    }
+    .stat-card:hover { transform: translateY(-5px); }
+
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 1.5rem;
+    }
+    .bg-soft-red { background: rgba(180, 18, 27, 0.1); }
+    .text-red { color: var(--accent); }
+
+    @media (max-width: 992px) {
+        .sidebar { left: -300px; }
+        .content { margin-left: 0; padding: 20px; }
+        .sidebar.active { left: 20px; }
+    }
+</style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Lecturer Panel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="nav-link text-white me-3" id="lecturerNameDisplay"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="logoutBtn">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sidebar">
+        <a href="#" id="uploadMaterialsLink" class="active"><i class="bi bi-cloud-arrow-up me-2"></i> Upload Materials</a>
+        <a href="#" id="manageMaterialsLink"><i class="bi bi-collection me-2"></i> My Materials</a>
+    </div>
+
+    <div class="content">
+        <div id="uploadMaterialsSection" class="container mt-4 active-section">
+            <h2>Upload Learning Material</h2>
+            <div class="glass-card p-4">
+                <form id="uploadForm">
+                    <div class="mb-3">
+                        <label class="form-label">Material Type</label>
+                        <select id="materialType" class="form-select form-control">
+                            <option value="recording">Lecture Recording (YouTube)</option>
+                            <option value="document">Lecture Material (PDF/Image)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" id="title" class="form-control" placeholder="Material Title" required>
+                    </div>
+                    <div id="youtubeInput" class="mb-3">
+                        <label for="url" class="form-label">YouTube Link</label>
+                        <input type="text" id="url" class="form-control" placeholder="YouTube Link">
+                    </div>
+                    <div id="fileInput" class="mb-3 d-none">
+                        <label for="materialUrl" class="form-label">Document Link (Google Drive / Direct Link)</label>
+                        <input type="text" id="materialUrl" class="form-control" placeholder="https://drive.google.com/...">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea id="description" class="form-control" rows="3" placeholder="Brief description"></textarea>
+                    </div>
+                    <div class="mb-3 d-none">
+                        <label for="materialLecturer" class="form-label">Assign to Lecturer Profile</label>
+                        <select id="materialLecturer" class="form-select form-control" required>
+                            <option value="">Select your lecturer profile</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary-custom">Upload Now</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="manageMaterialsSection" class="container mt-4 d-none">
+            <h2>My Uploaded Materials</h2>
+            <div class="glass-card p-4">
+                <div id="materialsList" class="row">
+                    <p class="text-center text-secondary">Loading materials...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Material Modal -->
+    <div class="modal fade" id="editMaterialModal" tabindex="-1" aria-labelledby="editMaterialModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content glass-card border-0">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title text-white" id="editMaterialModalLabel">Edit Material</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editMaterialForm">
+                        <input type="hidden" id="editMaterialId">
+                        <div class="mb-3">
+                            <label for="editMaterialTitle" class="form-label">Lesson Title</label>
+                            <input type="text" class="form-control" id="editMaterialTitle" required>
+                        </div>
+                        <div class="mb-3" id="editYoutubeInput">
+                            <label for="editMaterialUrl" class="form-label">YouTube Link</label>
+                            <input type="text" class="form-control" id="editMaterialUrl">
+                        </div>
+                        <div class="mb-3 d-none" id="editFileInput">
+                            <label class="form-label">Document Link (Google Drive)</label>
+                            <input type="text" class="form-control" id="editMaterialFileUrl">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editMaterialDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editMaterialDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3 d-none">
+                            <label for="editMaterialLecturer" class="form-label">Lecturer Profile</label>
+                            <select id="editMaterialLecturer" class="form-select form-control" required>
+                                <option value="">Select lecturer profile</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary-custom w-100">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/config.js"></script>
+    <script>
+        const API_BASE = window.API_URL || window.location.origin;
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        if (!user || user.role !== 'lecturer') {
+            window.location.href = '/login.html';
+        }
+
+        document.getElementById('lecturerNameDisplay').innerText = `Welcome, ${user.name}`;
+
+        async function loadLecturersForUpload() {
+            try {
+                const res = await fetch(API_BASE + '/admin/lecturers');
+                let lecturers = await res.json();
+                
+                // Filter to only show lecturers assigned to this user
+                if (user.assignedLecturers && user.assignedLecturers.length > 0) {
+                    lecturers = lecturers.filter(lec => user.assignedLecturers.includes(lec._id));
+                }
+
+                const select = document.getElementById('materialLecturer');
+                const editSelect = document.getElementById('editMaterialLecturer');
+                
+                // Clear existing options except the first one
+                select.innerHTML = '<option value="">Select your lecturer profile</option>';
+                editSelect.innerHTML = '<option value="">Select lecturer profile</option>';
+
+                lecturers.forEach(lec => {
+                    const opt = document.createElement('option');
+                    opt.value = lec._id;
+                    opt.textContent = lec.name;
+                    select.appendChild(opt);
+                    
+                    const editOpt = opt.cloneNode(true);
+                    editSelect.appendChild(editOpt);
+                });
+
+                // Auto-select if only one lecturer
+                if (lecturers.length === 1) {
+                    select.value = lecturers[0]._id;
+                    editSelect.value = lecturers[0]._id;
+                    
+                    // Update Welcome message with the specific lecturer name
+                    document.getElementById('lecturerNameDisplay').innerText = `Welcome, ${lecturers[0].name}`;
+                } else if (lecturers.length > 1) {
+                    // If multiple, we might want to show the dropdown again or just pick the first
+                    // For now, let's show the dropdown if multiple are assigned to one user
+                    document.getElementById('materialLecturer').parentElement.classList.remove('d-none');
+                    document.getElementById('editMaterialLecturer').parentElement.classList.remove('d-none');
+                }
+            } catch (err) {
+                console.error("Failed to load lecturers:", err);
+            }
+        }
+        loadLecturersForUpload();
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.container').forEach(s => s.classList.add('d-none'));
+            document.getElementById(sectionId).classList.remove('d-none');
+            
+            document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+            if (sectionId === 'uploadMaterialsSection') document.getElementById('uploadMaterialsLink').classList.add('active');
+            if (sectionId === 'manageMaterialsSection') {
+                document.getElementById('manageMaterialsLink').classList.add('active');
+                loadLecturerMaterials();
+            }
+        }
+
+        document.getElementById('uploadMaterialsLink').onclick = () => showSection('uploadMaterialsSection');
+        document.getElementById('manageMaterialsLink').onclick = () => showSection('manageMaterialsSection');
+
+        document.getElementById('materialType').onchange = (e) => {
+            if (e.target.value === 'recording') {
+                document.getElementById('youtubeInput').classList.remove('d-none');
+                document.getElementById('fileInput').classList.add('d-none');
+            } else {
+                document.getElementById('youtubeInput').classList.add('d-none');
+                document.getElementById('fileInput').classList.remove('d-none');
+            }
+        };
+
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const type = document.getElementById('materialType').value.trim();
+            const title = document.getElementById('title').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const lecturerId = document.getElementById('materialLecturer').value;
+            const youtubeUrl = document.getElementById('url').value.trim();
+            const fileUrl = document.getElementById('materialUrl').value.trim();
+
+            if (!title || !lecturerId || (type === 'recording' && !youtubeUrl) || (type === 'document' && !fileUrl)) {
+                alert(
+                    !title ? 'Please provide a title' :
+                    !lecturerId ? 'Please select your lecturer profile' :
+                    type === 'recording' ? 'YouTube URL is required for recordings' :
+                    'Document URL (e.g. Google Drive) is required'
+                );
+                return;
+            }
+            const res = await fetch(API_BASE + '/admin/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    type, title, description, 
+                    youtubeUrl: type === 'recording' ? youtubeUrl : null,
+                    fileUrl: type === 'document' ? fileUrl : null,
+                    lecturerId: lecturerId
+                })
+            });
+
+            if (res.ok) {
+                alert('Material uploaded successfully!');
+                e.target.reset();
+                showSection('manageMaterialsSection');
+            } else {
+                const result = await res.json();
+                alert('Upload failed: ' + (result.msg || 'Unknown error'));
+            }
+        };
+
+        async function loadLecturerMaterials() {
+            const container = document.getElementById('materialsList');
+            container.innerHTML = '<p class="text-center">Loading...</p>';
+            
+            // For lecturers, only show materials belonging to their assigned lecturer profiles
+            let url = API_BASE + '/admin/materials';
+            if (user.assignedLecturers && user.assignedLecturers.length > 0) {
+                // We can fetch all and filter, or if the API supports it, fetch by lecturerId
+                // Let's filter client-side for simplicity since we already have the IDs
+                const res = await fetch(url);
+                let materials = await res.json();
+                materials = materials.filter(m => user.assignedLecturers.includes(m.lecturerId));
+                
+                displayMaterials(materials, container);
+            } else {
+                container.innerHTML = '<p class="text-center text-secondary">You have no lecturer profiles assigned. Please contact the administrator.</p>';
+            }
+        }
+
+        function displayMaterials(materials, container) {
+            container.innerHTML = '';
+            if (materials.length === 0) {
+                container.innerHTML = '<p class="text-center text-secondary">No materials uploaded yet.</p>';
+                return;
+            }
+
+            materials.forEach(m => {
+                const card = `
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="glass-card p-3 h-100 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-danger">${m.type}</span>
+                            </div>
+                            <h5 class="text-white">${m.title}</h5>
+                            <p class="text-secondary small flex-grow-1">${m.description || 'No description'}</p>
+                            <div class="mt-3 d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-info flex-grow-1" onclick="openEditModal('${m._id}')">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteMaterial('${m._id}')"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        async function openEditModal(id) {
+            const res = await fetch(API_BASE + `/admin/materials/${id}`);
+            const m = await res.json();
+            
+            document.getElementById('editMaterialId').value = m._id;
+            document.getElementById('editMaterialTitle').value = m.title;
+            document.getElementById('editMaterialDescription').value = m.description;
+            document.getElementById('editMaterialLecturer').value = m.lecturerId || '';
+
+            if (m.type === 'recording') {
+                document.getElementById('editYoutubeInput').classList.remove('d-none');
+                document.getElementById('editFileInput').classList.add('d-none');
+                document.getElementById('editMaterialUrl').value = m.youtubeUrl || '';
+            } else {
+                document.getElementById('editYoutubeInput').classList.add('d-none');
+                document.getElementById('editFileInput').classList.remove('d-none');
+                document.getElementById('editMaterialFileUrl').value = m.fileUrl || '';
+            }
+
+            new bootstrap.Modal(document.getElementById('editMaterialModal')).show();
+        }
+
+        document.getElementById('editMaterialForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editMaterialId').value;
+            const data = {
+                title: document.getElementById('editMaterialTitle').value,
+                description: document.getElementById('editMaterialDescription').value,
+                youtubeUrl: document.getElementById('editMaterialUrl').value,
+                fileUrl: document.getElementById('editMaterialFileUrl').value,
+                lecturerId: document.getElementById('editMaterialLecturer').value || null
+            };
+
+            const res = await fetch(API_BASE + `/admin/materials/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                alert('Updated successfully!');
+                bootstrap.Modal.getInstance(document.getElementById('editMaterialModal')).hide();
+                loadLecturerMaterials();
+            } else {
+                alert('Update failed.');
+            }
+        };
+
+        async function deleteMaterial(id) {
+            if (!confirm('Are you sure?')) return;
+            const res = await fetch(API_BASE + `/admin/materials/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadLecturerMaterials();
+            } else {
+                alert('Delete failed.');
+            }
+        }
+
+        document.getElementById('logoutBtn').onclick = () => {
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        };
+    </script>
+</body>
+</html>

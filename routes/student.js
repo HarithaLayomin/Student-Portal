@@ -4,23 +4,45 @@ const Material = require('../models/Material');
 const ProfileRequest = require('../models/ProfileRequest');
 const User = require('../models/User');
 
-// Fetch materials based on student's allowed courses
+// Fetch materials based on student's allowed courses and assigned lecturers
 router.get('/my-materials', async (req, res) => {
     try {
-        const coursesQuery = req.query.courses;
+        const { courses: coursesQuery, lecturerIds: lecturerIdsQuery } = req.query;
         const courses = coursesQuery ? coursesQuery.split(',').filter(c => c.trim() !== "") : [];
+        const lecturerIds = lecturerIdsQuery ? lecturerIdsQuery.split(',').filter(id => id.trim() !== "") : [];
         
-        if (courses.length === 0) {
-            return res.json([]);
+        let query = {};
+
+        // Filter by lecturers: either the student's assigned lecturers OR public materials (lecturerId: null)
+        if (lecturerIds.length > 0) {
+            query.$or = [
+                { lecturerId: { $in: lecturerIds } },
+                { lecturerId: null }
+            ];
+        } else {
+            // If no lecturer assigned, show only public materials
+            query.lecturerId = null;
         }
 
-        // Make course search case-insensitive and handle potential whitespace
-        const materials = await Material.find({ 
-            courseName: { 
-                $in: courses.map(c => new RegExp(`^${c.trim()}$`, 'i')) 
-            } 
-        }).sort({ createdAt: -1 });
-        
+        // Optional: Filter by courses if provided (backward compatibility)
+        if (courses.length > 0) {
+            // Only apply course filter if the material has a courseName
+            // or if we want to strictly limit by course.
+            // But since the user wants lecturer-wise separation, we'll make this less strict.
+            // If a material has a courseName, it must be in the student's courses.
+            // If it doesn't have a courseName, it's allowed (if lecturer matches).
+            query.$and = query.$and || [];
+            query.$and.push({
+                $or: [
+                    { courseName: { $exists: false } },
+                    { courseName: null },
+                    { courseName: "" },
+                    { courseName: { $in: courses.map(c => new RegExp(`^${c.trim()}$`, 'i')) } }
+                ]
+            });
+        }
+
+        const materials = await Material.find(query).populate('lecturerId', 'name').sort({ createdAt: -1 });
         res.json(materials);
     } catch (err) {
         console.error("Error fetching materials:", err);

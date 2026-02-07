@@ -9,7 +9,7 @@
     <link href="/style.css" rel="stylesheet">
     <style>
         :root {
-            --accent-gradient: linear-gradient(135deg, #7c3aed, #4f46e5);
+            --accent-gradient: linear-gradient(135deg, #B4121B, #7a0c12);
         }
 
         .hero-section {
@@ -19,7 +19,7 @@
             position: relative;
             overflow: hidden;
             padding-top: 100px;
-            background: radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.1) 0%, transparent 50%);
+            background: radial-gradient(circle at 50% 50%, rgba(180, 18, 27, 0.1) 0%, transparent 50%);
         }
 
         .hero-section::before {
@@ -252,9 +252,6 @@
     <header class="hero-section text-center">
         <div class="container">
             <div class="hero-content animate-fade-in">
-                <div class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-3 py-2 mb-4 border border-primary border-opacity-25">
-                    <i class="bi bi-stars me-2"></i> Elevate Your Communication
-                </div>
                 <h1 id="heroTitle" class="hero-title">Master Academic English <br> & Presentation Skills</h1>
                 <p id="heroSubtitle" class="hero-subtitle">Transform your professional delivery with our 2-month expert-led masterclass. Designed for ambitious students and professionals.</p>
                 
@@ -337,6 +334,17 @@
         let slides = [];
         let timer;
 
+        // Helper to convert Google Drive share links to direct image links
+        function formatGoogleDriveLink(url) {
+            if (url.includes('drive.google.com')) {
+                const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                if (match && match[1]) {
+                    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                }
+            }
+            return url;
+        }
+
         async function loadBanners() {
             try {
                 const res = await fetch(API_URL + '/api/banners');
@@ -358,7 +366,9 @@
                     const slide = document.createElement(banner.linkUrl ? 'a' : 'div');
                     slide.className = `slide ${index === 0 ? 'active' : ''}`;
                     if (banner.linkUrl) slide.href = banner.linkUrl;
-                    slide.style.backgroundImage = `url(${banner.imageUrl})`;
+                    
+                    const imageUrl = formatGoogleDriveLink(banner.imageUrl);
+                    slide.style.backgroundImage = `url(${imageUrl})`;
                     slide.innerHTML = `<div class="slide-content"><h4 class="slide-title">${banner.title}</h4></div>`;
                     container.appendChild(slide);
 

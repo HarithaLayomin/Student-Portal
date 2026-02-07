@@ -19,21 +19,6 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Multer storage for banner images (Cloudinary)
-const bannerStorage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: 'banners',
-        allowed_formats: ['jpg', 'png', 'jpeg'],
-        transformation: [{ width: 1200, height: 600, crop: 'limit' }]
-    }
-});
-const imageOnly = (req, file, cb) => {
-    if (file.mimetype && file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('Only image files are allowed'));
-};
-const uploadBannerImage = multer({ storage: bannerStorage, fileFilter: imageOnly, limits: { fileSize: 5 * 1024 * 1024 } });
-
 // Multer storage for lecturer photos (Cloudinary)
 const lecturerStorage = new CloudinaryStorage({
     cloudinary: cloudinary,
@@ -43,57 +28,44 @@ const lecturerStorage = new CloudinaryStorage({
         transformation: [{ width: 500, height: 500, crop: 'thumb', gravity: 'face' }]
     }
 });
+const imageOnly = (req, file, cb) => {
+    if (file.mimetype && file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Only image files are allowed'));
+};
 const uploadLecturerPhoto = multer({ storage: lecturerStorage, fileFilter: imageOnly, limits: { fileSize: 2 * 1024 * 1024 } });
 
-// Multer storage for lecture materials (Cloudinary)
-const materialStorage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: async (req, file) => {
-        const isPdf = file.mimetype === 'application/pdf';
-        return {
-            folder: 'materials',
-            resource_type: isPdf ? 'raw' : 'image', // 'raw' is needed for PDFs to be stored correctly
-            public_id: Date.now() + '_' + file.originalname.split('.')[0].replace(/[^a-zA-Z0-9._-]/g, '_'),
-            format: isPdf ? 'pdf' : undefined // explicit format for PDFs
-        };
-    }
-});
-const materialFileFilter = (req, file, cb) => {
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-    if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new Error('Only PDF and Image files (JPG, PNG) are allowed'), false);
-    }
-};
-const uploadMaterial = multer({ storage: materialStorage, fileFilter: materialFileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
-
-// Route to save a new YouTube link or Material file
-router.post('/upload', uploadMaterial.single('file'), async (req, res) => {
+// Route to save a new YouTube link or Material Link (Google Drive, etc.)
+router.post('/upload', async (req, res) => {
     try {
-        const { title, youtubeUrl, courseName, description, type } = req.body;
+        const { title, youtubeUrl, description, type, fileUrl, lecturerId } = req.body;
+        console.log('Material upload payload:', req.body);
 
-        if (!title || !courseName) {
-            return res.status(400).json({ msg: "Please fill all required fields" });
+        if (!title) {
+            return res.status(400).json({ msg: "Please provide a title" });
         }
 
-        const materialData = { title, courseName, description, type: type || 'recording' };
+        const materialData = { 
+            title, 
+            description, 
+            type: type || 'recording',
+            lecturerId: lecturerId || null
+        };
 
         if (type === 'recording') {
             if (!youtubeUrl) return res.status(400).json({ msg: "YouTube URL is required for recordings" });
             materialData.youtubeUrl = youtubeUrl;
         } else if (type === 'document') {
-            if (!req.file) return res.status(400).json({ msg: "File upload is required for documents" });
-            materialData.fileUrl = req.file.path; // Use the full Cloudinary URL
+            if (!fileUrl) return res.status(400).json({ msg: "Document URL (e.g. Google Drive) is required" });
+            materialData.fileUrl = fileUrl;
         }
 
         const newMaterial = new Material(materialData);
         await newMaterial.save();
-        res.json({ msg: "✅ Material Uploaded Successfully!" });
+        res.json({ msg: "✅ Material Added Successfully!" });
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ msg: err.message || "❌ Error uploading material" });
+        res.status(500).json({ msg: err.message || "❌ Error adding material" });
     }
 });
 
@@ -101,7 +73,12 @@ router.post('/upload', uploadMaterial.single('file'), async (req, res) => {
 // Get all materials
 router.get('/materials', async (req, res) => {
     try {
-        const materials = await Material.find();
+        const { lecturerId } = req.query;
+        let query = {};
+        if (lecturerId) {
+            query.lecturerId = lecturerId;
+        }
+        const materials = await Material.find(query);
         res.json(materials);
     } catch (err) {
         console.error(err);
@@ -126,8 +103,8 @@ router.get('/materials/:id', async (req, res) => {
 // Update material
 router.put('/materials/:id', async (req, res) => {
     try {
-        const { title, youtubeUrl, courseName, description, type, fileUrl } = req.body;
-        const updateData = { title, courseName, description };
+        const { title, youtubeUrl, description, type, fileUrl, lecturerId } = req.body;
+        const updateData = { title, description, lecturerId: lecturerId || null };
         
         if (type) updateData.type = type;
         if (youtubeUrl !== undefined) updateData.youtubeUrl = youtubeUrl;
@@ -214,7 +191,7 @@ router.delete('/profile-requests/:id', async (req, res) => {
 // Get all users
 router.get('/users', async (req, res) => {
     try {
-        const users = await User.find({});
+        const users = await User.find({}).populate('assignedLecturers', 'name');
         res.json(users);
     } catch (err) {
         console.error(err);
@@ -240,7 +217,11 @@ router.get('/users/:id', async (req, res) => {
 // Add new user (manually by admin)
 router.post('/users', async (req, res) => {
     try {
-        const { name, email, password, role, permittedCourses } = req.body;
+        const { name, email, password, role, permittedCourses, assignedLecturers } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ msg: 'Email is required' });
+        }
 
         let user = await User.findOne({ email: email.toLowerCase() });
         if (user) {
@@ -256,6 +237,7 @@ router.post('/users', async (req, res) => {
             password: hashedPassword,
             role: role || 'student',
             permittedCourses: permittedCourses || [],
+            assignedLecturers: assignedLecturers || [],
             isApproved: true // Manually added users are approved by default
         });
 
@@ -271,11 +253,23 @@ router.post('/users', async (req, res) => {
 // Update user details
 router.put('/users/:id', async (req, res) => {
     try {
-        const { name, email, role, permittedCourses, isApproved } = req.body;
+        const { name, email, role, permittedCourses, isApproved, assignedLecturers } = req.body;
+
+        const updateData = { 
+            name, 
+            role, 
+            permittedCourses, 
+            isApproved, 
+            assignedLecturers: assignedLecturers || [] 
+        };
+
+        if (email) {
+            updateData.email = email.toLowerCase();
+        }
 
         const updatedUser = await User.findByIdAndUpdate(
             req.params.id,
-            { name, email: email.toLowerCase(), role, permittedCourses, isApproved },
+            updateData,
             { new: true }
         );
 
@@ -319,9 +313,10 @@ router.get('/pending-users', async (req, res) => {
 // Approve a user
 router.post('/approve-user/:id', async (req, res) => {
     try {
+        const { assignedLecturers } = req.body;
         const user = await User.findByIdAndUpdate(
             req.params.id,
-            { isApproved: true },
+            { isApproved: true, assignedLecturers: assignedLecturers || [] },
             { new: true }
         );
         if (!user) {
@@ -494,12 +489,12 @@ router.get('/banners', async (req, res) => {
     }
 });
 
-router.post('/banners', uploadBannerImage.single('image'), async (req, res) => {
+router.post('/banners', async (req, res) => {
     try {
-        const { title, linkUrl, active, order } = req.body;
-        const imageUrl = req.file
-            ? req.file.path // Cloudinary URL
-            : (req.body.imageUrl || '');
+        const { title, imageUrl, linkUrl, active, order } = req.body;
+        if (!imageUrl) {
+            return res.status(400).json({ msg: 'Banner image URL is required' });
+        }
         const banner = new Banner({ title, imageUrl, linkUrl, active, order });
         await banner.save();
         res.json({ msg: 'Banner created', banner });

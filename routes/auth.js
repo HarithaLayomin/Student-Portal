@@ -8,10 +8,14 @@ router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         
+        if (!email || !password) {
+            return res.status(400).json({ msg: "Email and password are required" });
+        }
+        
         // This will print in your VS Code terminal
         console.log("Checking login for:", email);
 
-        const user = await User.findOne({ email: email.toLowerCase() });
+        const user = await User.findOne({ email: email.toLowerCase() }).populate('assignedLecturers', 'name');
         
         if (!user) {
             console.log("❌ User not found in database");
@@ -36,7 +40,9 @@ router.post('/login', async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
-            courses: user.permittedCourses
+            courses: user.permittedCourses,
+            assignedLecturers: user.assignedLecturers ? user.assignedLecturers.map(l => l._id) : [],
+            lecturerNames: user.assignedLecturers ? user.assignedLecturers.map(l => l.name) : []
         });
 
     } catch (err) {
@@ -48,7 +54,11 @@ router.post('/login', async (req, res) => {
 // This is your "Signup Route"
 router.post('/signup', async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, courses } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ msg: "Email is required" });
+        }
 
         // Check if user already exists
         let user = await User.findOne({ email: email.toLowerCase() });
