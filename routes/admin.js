@@ -6,6 +6,7 @@ const User = require('../models/User');
 const Lecturer = require('../models/Lecturer');
 const Banner = require('../models/Banner');
 const HomeContent = require('../models/HomeContent');
+const ProfileRequest = require('../models/ProfileRequest');
 const multer = require('multer');
 const path = require('path');
 
@@ -39,26 +40,53 @@ const lecturerStorage = multer.diskStorage({
 });
 const uploadLecturerPhoto = multer({ storage: lecturerStorage, fileFilter: imageOnly, limits: { fileSize: 2 * 1024 * 1024 } });
 
-// Route to save a new YouTube link
-router.post('/upload', async (req, res) => {
-    try {
-        const { title, youtubeUrl, courseName, description } = req.body;
+// Multer storage for lecture materials (PDFs, Images, etc.)
+const materialStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, path.join(__dirname, '..', 'public', 'uploads', 'materials'));
+    },
+    filename: (req, file, cb) => {
+        const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const ts = Date.now();
+        cb(null, `${ts}_${safeName}`);
+    }
+});
+const materialFileFilter = (req, file, cb) => {
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Only PDF and Image files (JPG, PNG) are allowed'), false);
+    }
+};
+const uploadMaterial = multer({ storage: materialStorage, fileFilter: materialFileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 
-        // 1. Basic Validation: Ensure fields aren't empty
-        if (!title || !youtubeUrl || !courseName) {
-            return res.status(400).json({ msg: "Please fill all fields" });
+// Route to save a new YouTube link or Material file
+router.post('/upload', uploadMaterial.single('file'), async (req, res) => {
+    try {
+        const { title, youtubeUrl, courseName, description, type } = req.body;
+
+        if (!title || !courseName) {
+            return res.status(400).json({ msg: "Please fill all required fields" });
         }
 
-        // 2. Create and Save
-        const newMaterial = new Material({ title, youtubeUrl, courseName, description });
-        await newMaterial.save();
+        const materialData = { title, courseName, description, type: type || 'recording' };
 
-        // 3. Send back JSON instead of plain text
+        if (type === 'recording') {
+            if (!youtubeUrl) return res.status(400).json({ msg: "YouTube URL is required for recordings" });
+            materialData.youtubeUrl = youtubeUrl;
+        } else if (type === 'document') {
+            if (!req.file) return res.status(400).json({ msg: "File upload is required for documents" });
+            materialData.fileUrl = `/uploads/materials/${req.file.filename}`;
+        }
+
+        const newMaterial = new Material(materialData);
+        await newMaterial.save();
         res.json({ msg: "✅ Material Uploaded Successfully!" });
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ msg: "❌ Error uploading material" });
+        res.status(500).json({ msg: err.message || "❌ Error uploading material" });
     }
 });
 
@@ -91,10 +119,16 @@ router.get('/materials/:id', async (req, res) => {
 // Update material
 router.put('/materials/:id', async (req, res) => {
     try {
-        const { title, youtubeUrl, courseName, description } = req.body;
+        const { title, youtubeUrl, courseName, description, type, fileUrl } = req.body;
+        const updateData = { title, courseName, description };
+        
+        if (type) updateData.type = type;
+        if (youtubeUrl !== undefined) updateData.youtubeUrl = youtubeUrl;
+        if (fileUrl !== undefined) updateData.fileUrl = fileUrl;
+
         const updatedMaterial = await Material.findByIdAndUpdate(
             req.params.id,
-            { title, youtubeUrl, courseName, description },
+            updateData,
             { new: true }
         );
         if (!updatedMaterial) {
@@ -118,6 +152,52 @@ router.delete('/materials/:id', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ msg: 'Server error deleting material' });
+    }
+});
+
+// Profile Requests Management
+router.get('/profile-requests', async (req, res) => {
+    try {
+        const requests = await ProfileRequest.find().sort({ createdAt: -1 });
+        res.json(requests);
+    } catch (err) {
+        res.status(500).json({ msg: 'Error fetching profile requests' });
+    }
+});
+
+router.put('/profile-requests/:id', async (req, res) => {
+    try {
+        const { status, adminComment } = req.body;
+        const request = await ProfileRequest.findById(req.params.id);
+        if (!request) return res.status(404).json({ msg: 'Request not found' });
+
+        request.status = status;
+        request.adminComment = adminComment;
+        await request.save();
+
+        if (status === 'approved') {
+            const user = await User.findById(request.studentId);
+            if (user) {
+                if (request.requestedChanges.name) user.name = request.requestedChanges.name;
+                if (request.requestedChanges.email) user.email = request.requestedChanges.email.toLowerCase();
+                if (request.requestedChanges.phone) user.phone = request.requestedChanges.phone;
+                if (request.requestedChanges.address) user.address = request.requestedChanges.address;
+                await user.save();
+            }
+        }
+
+        res.json({ msg: `Request ${status} successfully` });
+    } catch (err) {
+        res.status(500).json({ msg: 'Error updating profile request' });
+    }
+});
+
+router.delete('/profile-requests/:id', async (req, res) => {
+    try {
+        await ProfileRequest.findByIdAndDelete(req.params.id);
+        res.json({ msg: 'Request deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ msg: 'Error deleting profile request' });
     }
 });
 

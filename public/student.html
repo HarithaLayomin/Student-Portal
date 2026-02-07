@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Learning Portal</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+v    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="/style.css" rel="stylesheet">
     <style>
         .banner-slideshow {
@@ -128,6 +128,77 @@
             font-weight: bold;
             font-size: 1.2rem;
         }
+
+        /* Sliding Panel Styles */
+        .sliding-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100%;
+            background: rgba(10, 15, 30, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 2000;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 1px solid var(--glass-border);
+            padding: 2rem;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .sliding-panel.open {
+            right: 0;
+        }
+
+        .panel-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1999;
+            display: none;
+        }
+
+        .panel-overlay.show {
+            display: block;
+        }
+
+        .resource-item {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .resource-item:hover {
+            border-color: var(--accent);
+            transform: translateX(-5px);
+        }
+
+        .btn-profile {
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            color: var(--accent);
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-profile:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+
+        button.nav-link {
+            background: none;
+            border: none;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -141,7 +212,19 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto gap-3 align-items-center">
                     <li class="nav-item">
-                        <a class="nav-link" href="/learning_resources.html">Resources</a>
+                        <button class="btn btn-link nav-link" onclick="togglePanel('pills-recordings')">
+                            <i class="bi bi-collection-play me-1"></i>Materials
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-link nav-link" onclick="togglePanel('pills-materials')">
+                            <i class="bi bi-file-earmark-text me-1"></i>Resources
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn-profile" data-bs-toggle="modal" data-bs-target="#profileModal">
+                            <i class="bi bi-person-gear me-1"></i>Profile
+                        </button>
                     </li>
                     <li class="nav-item">
                         <a class="btn btn-outline-custom btn-sm" href="#" id="logoutBtn">Sign Out</a>
@@ -150,6 +233,87 @@
             </div>
         </div>
     </nav>
+
+    <!-- Sliding Panel -->
+    <div class="panel-overlay" id="panelOverlay" onclick="togglePanel()"></div>
+    <div class="sliding-panel" id="slidingPanel">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="text-white mb-0">Quick Access</h3>
+            <button class="btn-close btn-close-white" onclick="togglePanel()"></button>
+        </div>
+        
+        <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pills-recordings-tab" data-bs-toggle="pill" data-bs-target="#pills-recordings" type="button">Recordings</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pills-materials-tab" data-bs-toggle="pill" data-bs-target="#pills-materials" type="button">Documents</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade show active" id="pills-recordings" role="tabpanel">
+                <div id="panelRecordingsList">
+                    <p class="text-secondary small">Loading recordings...</p>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="pills-materials" role="tabpanel">
+                <div id="panelDocumentsList">
+                    <p class="text-secondary small">Loading documents...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Request Modal -->
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content glass-card border-0">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title text-white">Profile Settings</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-4 text-center">
+                        <div class="user-avatar mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;" id="modalUserInitial">S</div>
+                        <h4 class="text-white mb-1" id="modalUserName">Student Name</h4>
+                        <p class="text-secondary small" id="modalUserEmail">student@example.com</p>
+                    </div>
+                    
+                    <h6 class="text-primary mb-3">Request Profile Update</h6>
+                    <form id="profileRequestForm">
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small">Full Name</label>
+                            <input type="text" id="reqName" class="form-control" placeholder="New Name (leave blank if no change)">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small">Email Address</label>
+                            <input type="email" id="reqEmail" class="form-control" placeholder="New Email (leave blank if no change)">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small">Phone Number</label>
+                            <input type="text" id="reqPhone" class="form-control" placeholder="New Phone Number">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small">Address</label>
+                            <textarea id="reqAddress" class="form-control" rows="2" placeholder="New Address"></textarea>
+                        </div>
+                        <div class="alert alert-info small bg-opacity-10 border-info text-info">
+                            <i class="bi bi-info-circle me-2"></i>Requests are reviewed by admins before being applied.
+                        </div>
+                        <button type="submit" class="btn-primary-custom w-100 mt-3">Submit Request</button>
+                    </form>
+                    
+                    <div class="mt-4">
+                        <h6 class="text-secondary small mb-3">Recent Requests</h6>
+                        <div id="recentRequestsList" class="small">
+                            <!-- Recent requests will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="container" style="margin-top: 100px;">
         <div class="welcome-section d-flex align-items-center gap-4 animate-fade-in">
@@ -165,7 +329,7 @@
             <div class="slideshow-dots" id="bannerDots"></div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4" id="learningMaterials">
             <h2 class="h4 fw-bold m-0">My Learning Materials</h2>
             <div id="materialCount" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2">0 Lessons</div>
         </div>
@@ -187,6 +351,124 @@
         } else {
             document.getElementById('userName').innerText = user.name || user.username;
             document.getElementById('userInitial').innerText = (user.name || user.username).charAt(0).toUpperCase();
+            
+            // Modal info
+            document.getElementById('modalUserName').innerText = user.name || user.username;
+            document.getElementById('modalUserEmail').innerText = user.email;
+            document.getElementById('modalUserInitial').innerText = (user.name || user.username).charAt(0).toUpperCase();
+            loadMyRequests();
+        }
+
+        // Toggle Sliding Panel
+        function togglePanel(tabId) {
+            const panel = document.getElementById('slidingPanel');
+            const overlay = document.getElementById('panelOverlay');
+            
+            panel.classList.toggle('open');
+            overlay.classList.toggle('show');
+
+            if (tabId && panel.classList.contains('open')) {
+                const tabTrigger = document.querySelector(`#${tabId}-tab`);
+                if (tabTrigger) {
+                    const tab = new bootstrap.Tab(tabTrigger);
+                    tab.show();
+                }
+            }
+        }
+
+        // Profile Request Logic
+        document.getElementById('profileRequestForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const user = JSON.parse(localStorage.getItem('user'));
+            
+            const requestedChanges = {
+                name: document.getElementById('reqName').value,
+                email: document.getElementById('reqEmail').value,
+                phone: document.getElementById('reqPhone').value,
+                address: document.getElementById('reqAddress').value
+            };
+
+            // Remove empty fields
+            Object.keys(requestedChanges).forEach(key => !requestedChanges[key] && delete requestedChanges[key]);
+
+            if (Object.keys(requestedChanges).length === 0) {
+                alert("Please fill in at least one field to request a change.");
+                return;
+            }
+
+            try {
+                const res = await fetch('/student/profile-request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentId: user._id,
+                        studentName: user.name,
+                        studentEmail: user.email,
+                        requestedChanges
+                    })
+                });
+
+                let data;
+                const contentType = res.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
+                    data = await res.json();
+                } else {
+                    const text = await res.text();
+                    console.error("Non-JSON response:", text);
+                    data = { msg: "Server returned non-JSON response (" + res.status + ")" };
+                }
+
+                if (res.ok) {
+                    alert("✅ Request submitted successfully!");
+                    e.target.reset();
+                    loadMyRequests();
+                } else {
+                    alert("❌ " + (data.msg || data.message || "Failed to submit request (Status: " + res.status + ")"));
+                    if (!user._id || !user.email) {
+                        alert("⚠️ Your session data is incomplete. Please log out and log in again to refresh your session.");
+                    }
+                }
+            } catch (err) {
+                console.error("Submission error:", err);
+                alert("❌ Error submitting request. Please check your internet connection or try re-logging.");
+            }
+        };
+
+        async function loadMyRequests() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user || !user._id) {
+                console.warn("Cannot load requests: User ID missing");
+                return;
+            }
+            try {
+                const res = await fetch(`/student/my-requests/${user._id}`);
+                if (!res.ok) throw new Error("Failed to fetch");
+                const requests = await res.json();
+                const container = document.getElementById('recentRequestsList');
+                container.innerHTML = '';
+
+                if (requests.length === 0) {
+                    container.innerHTML = '<p class="text-secondary">No recent requests.</p>';
+                    return;
+                }
+
+                requests.slice(0, 3).forEach(r => {
+                    const statusClass = r.status === 'pending' ? 'text-warning' : (r.status === 'approved' ? 'text-success' : 'text-danger');
+                    container.innerHTML += `
+                        <div class="mb-2 p-2 glass-card">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold ${statusClass}">${r.status.toUpperCase()}</span>
+                                <span class="text-secondary">${new Date(r.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <div class="text-secondary small mt-1">
+                                ${Object.keys(r.requestedChanges).join(', ')}
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                console.error("Error loading requests:", err);
+            }
         }
 
         document.getElementById('logoutBtn').addEventListener('click', (e) => {
@@ -298,9 +580,14 @@
                 const materials = await response.json();
                 document.getElementById('materialCount').innerText = `${materials.length} Lessons`;
                 container.innerHTML = ''; 
+                
+                const panelRecs = document.getElementById('panelRecordingsList');
+                const panelDocs = document.getElementById('panelDocumentsList');
+                panelRecs.innerHTML = '';
+                panelDocs.innerHTML = '';
 
                 if (materials.length === 0) {
-                    container.innerHTML = `
+                    const emptyHtml = `
                         <div class="col-12 text-center py-5">
                             <div class="glass-card p-5">
                                 <i class="bi bi-journal-x text-secondary" style="font-size: 3rem;"></i>
@@ -309,34 +596,109 @@
                             </div>
                         </div>
                     `;
+                    container.innerHTML = emptyHtml;
+                    panelRecs.innerHTML = '<p class="text-secondary small">No recordings found.</p>';
+                    panelDocs.innerHTML = '<p class="text-secondary small">No documents found.</p>';
                     return;
                 }
 
+                let recordingCount = 0;
+                let documentCount = 0;
+
                 materials.forEach(item => {
-                    let videoId = '';
-                    if (item.youtubeUrl) {
-                        if (item.youtubeUrl.includes('v=')) {
-                            videoId = item.youtubeUrl.split('v=')[1].split('&')[0];
-                        } else {
-                            videoId = item.youtubeUrl.split('/').pop();
-                        }
-                    }
+                    // Classification logic:
+                    // 1. If type is explicitly 'recording', it's a recording.
+                    // 2. If type is missing (old material), check if it has a youtubeUrl.
+                    const isRecording = item.type === 'recording' || (!item.type && item.youtubeUrl && item.youtubeUrl.trim() !== "");
                     
-                    container.innerHTML += `
-                        <div class="col-md-6 col-lg-4">
-                            <div class="video-card p-3">
-                                <div class="ratio ratio-16x9 mb-3 rounded-3 overflow-hidden">
-                                    <iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>
-                                </div>
-                                <h5 class="fw-bold mb-2">${item.title || 'Untitled'}</h5>
-                                <div class="d-flex justify-content-between align-items-center mt-auto">
-                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">${item.courseName || 'General'}</span>
-                                    <small class="text-secondary"><i class="bi bi-clock me-1"></i> New Lesson</small>
+                    if (isRecording) {
+                        recordingCount++;
+                        let videoId = '';
+                        if (item.youtubeUrl) {
+                            if (item.youtubeUrl.includes('v=')) {
+                                videoId = item.youtubeUrl.split('v=')[1].split('&')[0];
+                            } else {
+                                videoId = item.youtubeUrl.split('/').pop();
+                            }
+                        }
+                        
+                        // Main Grid Item
+                        container.innerHTML += `
+                            <div class="col-md-6 col-lg-4">
+                                <div class="video-card p-3">
+                                    <div class="ratio ratio-16x9 mb-3 rounded-3 overflow-hidden">
+                                        <iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>
+                                    </div>
+                                    <h5 class="fw-bold mb-2">${item.title || 'Untitled'}</h5>
+                                    <div class="d-flex justify-content-between align-items-center mt-auto">
+                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">${item.courseName || 'General'}</span>
+                                        <small class="text-secondary"><i class="bi bi-youtube me-1"></i> Video</small>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+
+                        // Panel Item
+                        panelRecs.innerHTML += `
+                            <div class="resource-item">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="text-danger"><i class="bi bi-play-circle-fill fs-4"></i></div>
+                                    <div>
+                                        <h6 class="text-white mb-0 small">${item.title}</h6>
+                                        <span class="text-secondary" style="font-size: 0.7rem;">${item.courseName}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // Document type
+                        documentCount++;
+                        const fileExt = item.fileUrl ? item.fileUrl.split('.').pop().toLowerCase() : 'file';
+                        const icon = fileExt === 'pdf' ? 'bi-file-earmark-pdf text-info' : 'bi-file-earmark-image text-warning';
+                        
+                        // Main Grid Item
+                        container.innerHTML += `
+                            <div class="col-md-6 col-lg-4">
+                                <div class="video-card p-3 d-flex flex-column">
+                                    <div class="mb-3 rounded-3 overflow-hidden bg-dark d-flex align-items-center justify-content-center" style="height: 180px;">
+                                        <i class="bi ${icon}" style="font-size: 4rem;"></i>
+                                    </div>
+                                    <h5 class="fw-bold mb-2">${item.title || 'Untitled'}</h5>
+                                    <p class="text-secondary small mb-3 flex-grow-1">${item.description || 'Lecture material for ' + item.courseName}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">${item.courseName}</span>
+                                        <a href="${item.fileUrl}" target="_blank" class="btn btn-sm btn-primary-custom px-3">
+                                            <i class="bi bi-download me-1"></i>Open
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        // Panel Item
+                        panelDocs.innerHTML += `
+                            <a href="${item.fileUrl}" target="_blank" class="text-decoration-none">
+                                <div class="resource-item">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="text-info"><i class="bi ${icon} fs-4"></i></div>
+                                        <div>
+                                            <h6 class="text-white mb-0 small">${item.title}</h6>
+                                            <span class="text-secondary" style="font-size: 0.7rem;">${item.courseName} • ${fileExt.toUpperCase()}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                    }
                 });
+
+                // Add empty messages if a category has no items
+                if (recordingCount === 0) {
+                    panelRecs.innerHTML = '<p class="text-secondary small text-center py-3">No recordings found.</p>';
+                }
+                if (documentCount === 0) {
+                    panelDocs.innerHTML = '<p class="text-secondary small text-center py-3">No documents found.</p>';
+                }
             } catch (err) {
                 console.error("Failed to load materials:", err);
                 if (container) {

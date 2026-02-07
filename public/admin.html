@@ -107,6 +107,7 @@
         <a href="#" id="manageUsersLink"><i class="bi bi-people me-2"></i> Manage Users</a>
         <a href="#" id="homeContentLink"><i class="bi bi-house-gear me-2"></i> Homepage Content</a>
         <a href="#" id="manageLecturersLink"><i class="bi bi-person-badge me-2"></i> Manage Lecturers</a>
+        <a href="#" id="profileRequestsLink"><i class="bi bi-envelope me-2"></i> Profile Requests <span id="requestCountBadge" class="badge bg-danger rounded-pill d-none">0</span></a>
         <a href="#" id="manageBannersLink"><i class="bi bi-image me-2"></i> Advertisement Banners</a>
     </div>
 
@@ -160,27 +161,35 @@
     </div>
    
     <div id="uploadMaterialsSection" class="container mt-4 active-section">
-        <h2>Upload Lesson</h2>
+        <h2>Upload Material</h2>
         <div class="glass-card p-4">
             <form id="uploadForm">
                 <div class="mb-3">
-                    <label for="title" class="form-label">Lesson Title</label>
-                    <input type="text" id="title" class="form-control" placeholder="Lesson Title" required>
+                    <label class="form-label">Material Type</label>
+                    <select id="materialType" class="form-select form-control">
+                        <option value="recording">Lecture Recording (YouTube)</option>
+                        <option value="document">Lecture Material (PDF/Image)</option>
+                    </select>
                 </div>
                 <div class="mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" id="title" class="form-control" placeholder="Material Title" required>
+                </div>
+                <div id="youtubeInput" class="mb-3">
                     <label for="url" class="form-label">YouTube Link</label>
-                    <input type="text" id="url" class="form-control" placeholder="YouTube Link" required>
+                    <input type="text" id="url" class="form-control" placeholder="YouTube Link">
+                </div>
+                <div id="fileInput" class="mb-3 d-none">
+                    <label for="materialFile" class="form-label">Upload File (PDF, JPG, PNG)</label>
+                    <input type="file" id="materialFile" class="form-control" accept=".pdf, .jpg, .jpeg, .png">
                 </div>
                 <div class="mb-3">
                     <label for="description" class="form-label">Description</label>
-                    <textarea id="description" class="form-control" rows="3" placeholder="Brief description of the lesson"></textarea>
+                    <textarea id="description" class="form-control" rows="3" placeholder="Brief description"></textarea>
                 </div>
                 <div class="mb-3">
-                    <label for="course" class="form-label">Course</label>
-                    <select id="course" class="form-select form-control">
-                        <option value="Maths">Maths</option>
-                        <option value="Physics">Physics</option>
-                    </select>
+                    <label for="course" class="form-label">Course Name</label>
+                    <input type="text" id="course" class="form-control" placeholder="Enter Course Name (e.g., Marketing, Coding)" required>
                 </div>
                 <button type="submit" class="btn-primary-custom">Upload Now</button>
             </form>
@@ -263,6 +272,29 @@
         <div class="glass-card p-4">
             <div id="lecturersList" class="row g-4">
                 <p class="text-center text-secondary">Loading lecturers...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Requests Section -->
+    <div id="profileRequestsSection" class="container mt-4 d-none">
+        <h2>Profile Edit Requests</h2>
+        <div class="glass-card p-4">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Requested Changes</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="profileRequestsList">
+                        <!-- Requests will be loaded here -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -360,20 +392,25 @@
                             <label for="editMaterialTitle" class="form-label">Lesson Title</label>
                             <input type="text" class="form-control" id="editMaterialTitle" required>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3" id="editYoutubeInput">
                             <label for="editMaterialUrl" class="form-label">YouTube Link</label>
-                            <input type="text" class="form-control" id="editMaterialUrl" required>
+                            <input type="text" class="form-control" id="editMaterialUrl">
+                        </div>
+                        <div class="mb-3 d-none" id="editFileInput">
+                            <label class="form-label">File Link (View Only)</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="editMaterialFileUrl" readonly>
+                                <a href="#" id="editMaterialFileView" target="_blank" class="btn btn-outline-info">View</a>
+                            </div>
+                            <small class="text-secondary">File updates are currently not supported via edit. Please re-upload if needed.</small>
                         </div>
                         <div class="mb-3">
                             <label for="editMaterialDescription" class="form-label">Description</label>
                             <textarea class="form-control" id="editMaterialDescription" rows="3"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="editMaterialCourse" class="form-label">Course</label>
-                            <select class="form-select form-control" id="editMaterialCourse">
-                                <option value="Maths">Maths</option>
-                                <option value="Physics">Physics</option>
-                            </select>
+                            <label for="editMaterialCourse" class="form-label">Course Name</label>
+                            <input type="text" class="form-control" id="editMaterialCourse" placeholder="Enter Course Name" required>
                         </div>
                         <button type="submit" class="btn-primary-custom w-100">Save Changes</button>
                     </form>
@@ -488,6 +525,7 @@
             manageUsersSection: document.getElementById('manageUsersSection'),
             homeContentSection: document.getElementById('homeContentSection'),
             manageLecturersSection: document.getElementById('manageLecturersSection'),
+            profileRequestsSection: document.getElementById('profileRequestsSection'),
             manageBannersSection: document.getElementById('manageBannersSection'),
         };
 
@@ -509,33 +547,57 @@
         document.getElementById('manageUsersLink').addEventListener('click', (e) => { e.preventDefault(); showSection('manageUsersSection'); loadUsersForAdmin(); });
         document.getElementById('homeContentLink').addEventListener('click', (e) => { e.preventDefault(); showSection('homeContentSection'); loadHomeContentForAdmin(); });
         document.getElementById('manageLecturersLink').addEventListener('click', (e) => { e.preventDefault(); showSection('manageLecturersSection'); loadLecturersForAdmin(); });
+        document.getElementById('profileRequestsLink').addEventListener('click', (e) => { e.preventDefault(); showSection('profileRequestsSection'); loadProfileRequests(); });
         document.getElementById('manageBannersLink').addEventListener('click', (e) => { e.preventDefault(); showSection('manageBannersSection'); loadBannersForAdmin(); });
 
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('user');
-            window.location.href = '/';
+        // Toggle Material Type Inputs
+        document.getElementById('materialType').addEventListener('change', function() {
+            if (this.value === 'recording') {
+                document.getElementById('youtubeInput').classList.remove('d-none');
+                document.getElementById('fileInput').classList.add('d-none');
+                document.getElementById('url').required = true;
+                document.getElementById('materialFile').required = false;
+            } else {
+                document.getElementById('youtubeInput').classList.add('d-none');
+                document.getElementById('fileInput').classList.remove('d-none');
+                document.getElementById('url').required = false;
+                document.getElementById('materialFile').required = true;
+            }
         });
 
-        // --- Upload Material --- (existing functionality updated)
+        // --- Upload Material --- (updated to handle FormData and multi-type)
         document.getElementById('uploadForm').onsubmit = async (e) => {
             e.preventDefault();
-            const data = {
-                title: document.getElementById('title').value,
-                youtubeUrl: document.getElementById('url').value,
-                description: document.getElementById('description').value,
-                courseName: document.getElementById('course').value
-            };
+            const formData = new FormData();
+            formData.append('type', document.getElementById('materialType').value);
+            formData.append('title', document.getElementById('title').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('courseName', document.getElementById('course').value);
+
+            if (document.getElementById('materialType').value === 'recording') {
+                formData.append('youtubeUrl', document.getElementById('url').value);
+            } else {
+                const fileInput = document.getElementById('materialFile');
+                if (fileInput.files[0]) {
+                    formData.append('file', fileInput.files[0]);
+                }
+            }
+
             const res = await fetch('/admin/upload', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
+                body: formData
             });
+            const result = await res.json();
             if(res.ok) {
-                alert("Video Published!");
+                alert(result.msg);
                 e.target.reset();
+                // Reset inputs display
+                document.getElementById('youtubeInput').classList.remove('d-none');
+                document.getElementById('fileInput').classList.add('d-none');
                 loadMaterialsForAdmin();
+                refreshDashboardStats();
             } else {
-                alert("Failed to upload video.");
+                alert(result.msg || "Failed to upload material.");
             }
         };
 
@@ -795,17 +857,21 @@ document.addEventListener('DOMContentLoaded', refreshDashboardStats);
                 return;
             }
             materials.forEach(material => {
+                const isRecording = material.type === 'recording';
+                const materialIcon = isRecording ? '<i class="bi bi-youtube text-danger me-1"></i>' : '<i class="bi bi-file-earmark-pdf text-info me-1"></i>';
+                const link = isRecording ? material.youtubeUrl : material.fileUrl;
+                
                 container.innerHTML += `
                     <div class="col-md-6 mb-3">
                         <div class="glass-card p-3 h-100">
-                            <h5 class="text-white mb-2">${material.title}</h5>
+                            <h5 class="text-white mb-2">${materialIcon}${material.title}</h5>
                             <p class="text-secondary small mb-2">${material.description || 'No description'}</p>
                             <div class="d-flex align-items-center mb-3">
                                 <span class="badge bg-primary me-2">${material.courseName}</span>
-                                <a href="${material.youtubeUrl}" target="_blank" class="text-info small text-truncate">${material.youtubeUrl}</a>
+                                <a href="${link}" target="_blank" class="text-info small text-truncate">${link}</a>
                             </div>
                             <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-outline-light edit-material-btn" data-id="${material._id}">Edit</button>
+                                <button class="btn btn-sm btn-outline-primary edit-material-btn" data-id="${material._id}">Edit</button>
                                 <button class="btn btn-sm btn-outline-danger delete-material-btn" data-id="${material._id}">Delete</button>
                             </div>
                         </div>
@@ -825,9 +891,20 @@ document.addEventListener('DOMContentLoaded', refreshDashboardStats);
             const material = await response.json();
             document.getElementById('editMaterialId').value = material._id;
             document.getElementById('editMaterialTitle').value = material.title;
-            document.getElementById('editMaterialUrl').value = material.youtubeUrl;
             document.getElementById('editMaterialDescription').value = material.description;
             document.getElementById('editMaterialCourse').value = material.courseName;
+
+            if (material.type === 'recording') {
+                document.getElementById('editYoutubeInput').classList.remove('d-none');
+                document.getElementById('editFileInput').classList.add('d-none');
+                document.getElementById('editMaterialUrl').value = material.youtubeUrl || '';
+            } else {
+                document.getElementById('editYoutubeInput').classList.add('d-none');
+                document.getElementById('editFileInput').classList.remove('d-none');
+                document.getElementById('editMaterialFileUrl').value = material.fileUrl || '';
+                document.getElementById('editMaterialFileView').href = material.fileUrl || '#';
+            }
+
             var editMaterialModal = new bootstrap.Modal(document.getElementById('editMaterialModal'));
             editMaterialModal.show();
         }
@@ -1044,11 +1121,102 @@ document.addEventListener('DOMContentLoaded', refreshDashboardStats);
             }
         }
 
+        // --- Profile Requests Management ---
+        async function loadProfileRequests() {
+            try {
+                const res = await fetch('/admin/profile-requests');
+                const requests = await res.json();
+                const container = document.getElementById('profileRequestsList');
+                container.innerHTML = '';
+                
+                const pendingCount = requests.filter(r => r.status === 'pending').length;
+                const badge = document.getElementById('requestCountBadge');
+                if (pendingCount > 0) {
+                    badge.innerText = pendingCount;
+                    badge.classList.remove('d-none');
+                } else {
+                    badge.classList.add('d-none');
+                }
+
+                if (requests.length === 0) {
+                    container.innerHTML = '<tr><td colspan="5" class="text-center text-secondary py-4">No profile requests found.</td></tr>';
+                    return;
+                }
+
+                requests.forEach(r => {
+                    // Safety check for requestedChanges existence
+                    const changesObj = r.requestedChanges || {};
+                    const changes = Object.entries(changesObj)
+                        .filter(([k, v]) => v)
+                        .map(([k, v]) => `<div class="small"><strong>${k}:</strong> ${v}</div>`)
+                        .join('');
+                    
+                    const statusClass = r.status === 'pending' ? 'warning' : (r.status === 'approved' ? 'success' : 'danger');
+                    
+                    container.innerHTML += `
+                        <tr>
+                            <td>
+                                <strong>${r.studentName}</strong><br>
+                                <small class="text-secondary">${r.studentEmail}</small>
+                            </td>
+                            <td>${changes}</td>
+                            <td><span class="badge bg-${statusClass}">${r.status}</span></td>
+                            <td><small>${new Date(r.createdAt).toLocaleDateString()}</small></td>
+                            <td>
+                                ${r.status === 'pending' ? `
+                                    <button class="btn btn-sm btn-success me-1" onclick="handleProfileRequest('${r._id}', 'approved')">Approve</button>
+                                    <button class="btn btn-sm btn-danger" onclick="handleProfileRequest('${r._id}', 'rejected')">Reject</button>
+                                ` : `
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="deleteProfileRequest('${r._id}')">Remove</button>
+                                `}
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                console.error("Error loading profile requests:", err);
+            }
+        }
+
+        async function handleProfileRequest(id, status) {
+            const adminComment = prompt(`Enter a comment for this ${status} (optional):`);
+            try {
+                const res = await fetch(`/admin/profile-requests/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status, adminComment })
+                });
+                if (res.ok) {
+                    alert(`Request ${status} successfully`);
+                    loadProfileRequests();
+                    refreshDashboardStats();
+                }
+            } catch (err) {
+                alert("Error updating request");
+            }
+        }
+
+        async function deleteProfileRequest(id) {
+            if (!confirm("Remove this request record?")) return;
+            try {
+                const res = await fetch(`/admin/profile-requests/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    loadProfileRequests();
+                }
+            } catch (err) {
+                alert("Error deleting request");
+            }
+        }
+
         // Initial load of sections
-        // Default to upload materials or current active based on user preference
         showSection('uploadMaterialsSection');
+        loadProfileRequests(); // Check for notifications on load
         
-        
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        });
     </script>
 </body>
 </html>
