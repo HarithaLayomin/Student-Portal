@@ -41,13 +41,14 @@
         </form>
     </div>
 
+    <script src="js/config.js"></script>
     <script>
         document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            const res = await fetch('/auth/login', {
+            const res = await fetch(API_URL + '/auth/login', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ email, password })

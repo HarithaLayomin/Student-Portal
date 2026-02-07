@@ -1,10 +1,7 @@
-const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']); 
-
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const dotenv = require('dotenv'); // This MUST be here
+const dotenv = require('dotenv'); 
 const path = require('path');
 const fs = require('fs');
 const User = require('./models/User');
@@ -24,12 +21,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Static will be registered after explicit routes to allow custom overrides
-// Ensure uploads directories exist
-const bannerUploads = path.join(__dirname, 'public', 'uploads', 'banners');
-const lecturerUploads = path.join(__dirname, 'public', 'uploads', 'lecturers');
-[bannerUploads, lecturerUploads].forEach(dir => {
-    try { if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true }); } catch {}
-});
 
 // Routes
 app.get('/', (req, res) => {
@@ -71,8 +62,8 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/admin', require('./routes/admin'));
 app.use('/student', require('./routes/student'));
 
-const PORT = 3000;
-const server = app.listen(PORT, () => console.log(`🚀 Server: http://localhost:${PORT}`));
+const PORT = process.env.PORT || 3000;
+const server = app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
 
 // Handle server errors
 server.on('error', (err) => {
