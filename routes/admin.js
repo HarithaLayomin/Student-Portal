@@ -9,16 +9,23 @@ const HomeContent = require('../models/HomeContent');
 const ProfileRequest = require('../models/ProfileRequest');
 const multer = require('multer');
 const path = require('path');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
 
-// Multer storage for banner images
-const bannerStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '..', 'public', 'uploads', 'banners'));
-    },
-    filename: (req, file, cb) => {
-        const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const ts = Date.now();
-        cb(null, `${ts}_${safeName}`);
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Multer storage for banner images (Cloudinary)
+const bannerStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'banners',
+        allowed_formats: ['jpg', 'png', 'jpeg'],
+        transformation: [{ width: 1200, height: 600, crop: 'limit' }]
     }
 });
 const imageOnly = (req, file, cb) => {
@@ -27,28 +34,28 @@ const imageOnly = (req, file, cb) => {
 };
 const uploadBannerImage = multer({ storage: bannerStorage, fileFilter: imageOnly, limits: { fileSize: 5 * 1024 * 1024 } });
 
-// Multer storage for lecturer photos
-const lecturerStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '..', 'public', 'uploads', 'lecturers'));
-    },
-    filename: (req, file, cb) => {
-        const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const ts = Date.now();
-        cb(null, `${ts}_${safeName}`);
+// Multer storage for lecturer photos (Cloudinary)
+const lecturerStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'lecturers',
+        allowed_formats: ['jpg', 'png', 'jpeg'],
+        transformation: [{ width: 500, height: 500, crop: 'thumb', gravity: 'face' }]
     }
 });
 const uploadLecturerPhoto = multer({ storage: lecturerStorage, fileFilter: imageOnly, limits: { fileSize: 2 * 1024 * 1024 } });
 
-// Multer storage for lecture materials (PDFs, Images, etc.)
-const materialStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '..', 'public', 'uploads', 'materials'));
-    },
-    filename: (req, file, cb) => {
-        const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const ts = Date.now();
-        cb(null, `${ts}_${safeName}`);
+// Multer storage for lecture materials (Cloudinary)
+const materialStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: async (req, file) => {
+        const isPdf = file.mimetype === 'application/pdf';
+        return {
+            folder: 'materials',
+            resource_type: isPdf ? 'raw' : 'image', // 'raw' is needed for PDFs to be stored correctly
+            public_id: Date.now() + '_' + file.originalname.split('.')[0].replace(/[^a-zA-Z0-9._-]/g, '_'),
+            format: isPdf ? 'pdf' : undefined // explicit format for PDFs
+        };
     }
 });
 const materialFileFilter = (req, file, cb) => {
@@ -77,7 +84,7 @@ router.post('/upload', uploadMaterial.single('file'), async (req, res) => {
             materialData.youtubeUrl = youtubeUrl;
         } else if (type === 'document') {
             if (!req.file) return res.status(400).json({ msg: "File upload is required for documents" });
-            materialData.fileUrl = `/uploads/materials/${req.file.filename}`;
+            materialData.fileUrl = req.file.path; // Use the full Cloudinary URL
         }
 
         const newMaterial = new Material(materialData);
@@ -375,7 +382,7 @@ router.post('/lecturers', uploadLecturerPhoto.single('photo'), async (req, res) 
 
         let photoUrl = '';
         if (req.file) {
-            photoUrl = `/uploads/lecturers/${req.file.filename}`;
+            photoUrl = req.file.path; // Cloudinary URL
         }
 
         const lecturer = new Lecturer({ 
@@ -421,7 +428,7 @@ router.put('/lecturers/:id', uploadLecturerPhoto.single('photo'), async (req, re
         };
 
         if (req.file) {
-            updateData.photoUrl = `/uploads/lecturers/${req.file.filename}`;
+            updateData.photoUrl = req.file.path; // Cloudinary URL
         }
 
         const lecturer = await Lecturer.findByIdAndUpdate(
@@ -491,7 +498,7 @@ router.post('/banners', uploadBannerImage.single('image'), async (req, res) => {
     try {
         const { title, linkUrl, active, order } = req.body;
         const imageUrl = req.file
-            ? `/uploads/banners/${req.file.filename}`
+            ? req.file.path // Cloudinary URL
             : (req.body.imageUrl || '');
         const banner = new Banner({ title, imageUrl, linkUrl, active, order });
         await banner.save();
