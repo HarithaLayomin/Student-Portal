@@ -117,6 +117,10 @@
                         </select>
                     </div>
                     <div class="mb-3">
+                        <label for="courseName" class="form-label">Subject / Course Name</label>
+                        <input type="text" id="courseName" class="form-control" placeholder="e.g. Mathematics, Science" required>
+                    </div>
+                    <div class="mb-3">
                         <label for="title" class="form-label">Title</label>
                         <input type="text" id="title" class="form-control" placeholder="Material Title" required>
                     </div>
@@ -164,6 +168,10 @@
                 <div class="modal-body p-4">
                     <form id="editMaterialForm">
                         <input type="hidden" id="editMaterialId">
+                        <div class="mb-3">
+                            <label for="editMaterialCourse" class="form-label">Subject / Course Name</label>
+                            <input type="text" class="form-control" id="editMaterialCourse" required>
+                        </div>
                         <div class="mb-3">
                             <label for="editMaterialTitle" class="form-label">Lesson Title</label>
                             <input type="text" class="form-control" id="editMaterialTitle" required>
@@ -279,14 +287,16 @@
         document.getElementById('uploadForm').onsubmit = async (e) => {
             e.preventDefault();
             const type = document.getElementById('materialType').value.trim();
+            const courseName = document.getElementById('courseName').value.trim();
             const title = document.getElementById('title').value.trim();
             const description = document.getElementById('description').value.trim();
             const lecturerId = document.getElementById('materialLecturer').value;
             const youtubeUrl = document.getElementById('url').value.trim();
             const fileUrl = document.getElementById('materialUrl').value.trim();
 
-            if (!title || !lecturerId || (type === 'recording' && !youtubeUrl) || (type === 'document' && !fileUrl)) {
+            if (!courseName || !title || !lecturerId || (type === 'recording' && !youtubeUrl) || (type === 'document' && !fileUrl)) {
                 alert(
+                    !courseName ? 'Please provide a subject/course name' :
                     !title ? 'Please provide a title' :
                     !lecturerId ? 'Please select your lecturer profile' :
                     type === 'recording' ? 'YouTube URL is required for recordings' :
@@ -298,7 +308,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    type, title, description, 
+                    type, courseName, title, description, 
                     youtubeUrl: type === 'recording' ? youtubeUrl : null,
                     fileUrl: type === 'document' ? fileUrl : null,
                     lecturerId: lecturerId
@@ -346,6 +356,7 @@
                     <div class="col-md-6 col-lg-4 mb-4">
                         <div class="glass-card p-3 h-100 d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-primary small">${m.courseName || 'General'}</span>
                                 <span class="badge bg-danger">${m.type}</span>
                             </div>
                             <h5 class="text-white">${m.title}</h5>
@@ -366,6 +377,7 @@
             const m = await res.json();
             
             document.getElementById('editMaterialId').value = m._id;
+            document.getElementById('editMaterialCourse').value = m.courseName || '';
             document.getElementById('editMaterialTitle').value = m.title;
             document.getElementById('editMaterialDescription').value = m.description;
             document.getElementById('editMaterialLecturer').value = m.lecturerId || '';
@@ -387,6 +399,7 @@
             e.preventDefault();
             const id = document.getElementById('editMaterialId').value;
             const data = {
+                courseName: document.getElementById('editMaterialCourse').value,
                 title: document.getElementById('editMaterialTitle').value,
                 description: document.getElementById('editMaterialDescription').value,
                 youtubeUrl: document.getElementById('editMaterialUrl').value,

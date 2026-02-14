@@ -42,7 +42,10 @@ router.get('/my-materials', async (req, res) => {
             });
         }
 
-        const materials = await Material.find(query).populate('lecturerId', 'name').sort({ createdAt: -1 });
+        const materials = await Material.find(query)
+            .populate('lecturerId', 'name')
+            .sort({ createdAt: -1 })
+            .lean(); // Faster performance by returning plain JS objects
         res.json(materials);
     } catch (err) {
         console.error("Error fetching materials:", err);

@@ -37,7 +37,7 @@ const uploadLecturerPhoto = multer({ storage: lecturerStorage, fileFilter: image
 // Route to save a new YouTube link or Material Link (Google Drive, etc.)
 router.post('/upload', async (req, res) => {
     try {
-        const { title, youtubeUrl, description, type, fileUrl, lecturerId } = req.body;
+        const { title, youtubeUrl, description, type, fileUrl, lecturerId, courseName } = req.body;
         console.log('Material upload payload:', req.body);
 
         if (!title) {
@@ -48,7 +48,8 @@ router.post('/upload', async (req, res) => {
             title, 
             description, 
             type: type || 'recording',
-            lecturerId: lecturerId || null
+            lecturerId: lecturerId || null,
+            courseName: courseName || null
         };
 
         if (type === 'recording') {
@@ -103,8 +104,13 @@ router.get('/materials/:id', async (req, res) => {
 // Update material
 router.put('/materials/:id', async (req, res) => {
     try {
-        const { title, youtubeUrl, description, type, fileUrl, lecturerId } = req.body;
-        const updateData = { title, description, lecturerId: lecturerId || null };
+        const { title, youtubeUrl, description, type, fileUrl, lecturerId, courseName } = req.body;
+        const updateData = { 
+            title, 
+            description, 
+            lecturerId: lecturerId || null,
+            courseName: courseName || null 
+        };
         
         if (type) updateData.type = type;
         if (youtubeUrl !== undefined) updateData.youtubeUrl = youtubeUrl;

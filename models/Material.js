@@ -9,4 +9,10 @@ const MaterialSchema = new mongoose.Schema({
     description: { type: String },
     createdAt: { type: Date, default: Date.now }
 });
+
+// Add indexes for performance
+MaterialSchema.index({ lecturerId: 1 });
+MaterialSchema.index({ courseName: 1 });
+MaterialSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model('Material', MaterialSchema);
